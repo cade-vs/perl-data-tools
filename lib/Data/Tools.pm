@@ -97,6 +97,8 @@ our @EXPORT = qw(
               str_pad
               str_pad_center
               str_countable
+              
+              str_password_strength
 
               perl_package_to_file
 
@@ -480,6 +482,36 @@ sub str_countable
   my $many  = shift;
 
   return $count == 0 ? $many : $count == 1 ? $one : $many;
+}
+
+##############################################################################
+# str_password_strength()
+# returns a number representing password strength
+# it is tuned to give password strength in a number close to percents:
+# less than 50 weak, 50-75 good, 76-100 strong, more than 100 very strong
+
+sub str_password_strength
+{
+  my $p  = shift;
+
+  $p =~ s/(.)\1+/$1/g; # reduce repeating chars
+  
+  my $l  = length( $p ); # remaining string length 
+  
+  my $lc = $p =~ tr/[a-z]/[a-z]/; # lower case letters
+  my $uc = $p =~ tr/[A-Z]/[A-Z]/; # upper case letters
+  my $dc = $p =~ tr/[0-9]/[0-9]/; # digits
+  my $sc = $l -  $lc - $uc - $dc; # special chars
+
+  my $cc = ( $lc > 0 )      + ( $uc > 0 )      + ( $dc > 0 )      + ( $sc > 0 )     ; # used classes count
+  my $as = ( $lc > 0 ) * 26 + ( $uc > 0 ) * 26 + ( $dc > 0 ) * 10 + ( $sc > 0 ) * 30; # alphabet size
+
+  my $cp = $cc < 2 ? 2 : 1; # class count penalty
+  my $res = log( $as ** $l ) / $cp;
+
+  # print "<$p> l=$l   lc=$lc   uc=$uc   dc=$dc   sc=$sc   cc=$cc   as=$as   nb=$nb   ($res)\n";
+  
+  return $res;
 }
 
 ##############################################################################
