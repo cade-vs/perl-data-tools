@@ -114,6 +114,7 @@ our @EXPORT = qw(
               ref_freeze
               ref_thaw
 
+              fork_exec_cmd
             );
 
 our %EXPORT_TAGS = (
@@ -930,6 +931,19 @@ sub ref_thaw
                                                                                                                                 
   return ref( $ref ) ? $ref : undef;                                                                                            
 };                                                                                                                              
+
+##############################################################################
+
+sub fork_exec_cmd
+{
+  my $cmd = shift;
+  
+  my $pid = fork();
+  return undef if ! defined $pid; # fork failed
+  return $pid if $pid;            # master process here
+  exec $cmd;                      # sub process here  
+  exit;                           # if sub exec fails...
+}
 
 ##############################################################################
 
