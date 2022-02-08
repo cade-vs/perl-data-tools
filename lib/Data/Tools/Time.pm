@@ -135,7 +135,7 @@ sub unix_time_diff_in_words_relative
 
   if( $utd < 0 )
     {
-    return "in $uts";
+    return "after $uts";
     }
   elsif( $utd > 0 )
     {

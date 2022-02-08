@@ -105,11 +105,16 @@ our @EXPORT = qw(
               wp_hex
               md5_hex
               sha1_hex
+
+              wp_hex_file
+              md5_hex_file
+              sha1_hex_file
               
               create_random_id
               
               glob_tree
               read_dir_entries
+              fftwalk
               
               ref_freeze
               ref_thaw
@@ -411,7 +416,7 @@ sub str_html_escape
 {
   my $text = shift;
 
-  $text =~ s/([<>])/$HTML_ESCAPES{ $1 }/ge;
+  $text =~ s/([<>`'])/$HTML_ESCAPES{ $1 }/ge;
   
   return $text;
 }
@@ -854,6 +859,32 @@ sub sha1_hex
   return $hex;
 }
 
+sub __digest_hex_file
+{
+  my $digest = shift;
+  my $fn     = shift;
+  
+  open( my $fh, '<', $fn ) or return undef;
+  binmode $fh;
+  $digest->addfile( $fh );
+  return $digest->hexdigest;
+}
+
+sub wp_hex_file
+{
+  return __digest_hex_file( Digest->new( 'Whirlpool' ), shift() );
+}
+
+sub md5_hex_file
+{
+  return __digest_hex_file( Digest::MD5->new, shift() );
+}
+
+sub sha1_hex_file
+{
+  return __digest_hex_file( Digest::SHA1->new, shift() );
+}
+
 ##############################################################################
 
 sub create_random_id
@@ -910,6 +941,59 @@ sub read_dir_entries
   closedir( $dir );
   
   return @e;
+}
+
+##############################################################################
+
+sub __fftwalk
+{
+  my $e = shift;
+  my $a = shift;
+  my $f = shift; # filter: 0 all, 1 files, 2 dirs
+  
+  opendir( my $dir, $e ) or return undef;
+  my $ee;
+  while( $ee = readdir $dir )
+    {
+    next if $ee eq '.' or $ee eq '..';
+    my $eee = "$e/$ee";
+    
+    next if -l $eee; # FIXME: TODO: OPTION!!!!!!!!!
+    
+    if( -d $eee )
+      {
+      push @$a, $eee if $f != 1;
+      __fftwalk( $eee, $a, $f );
+      }
+    else
+      {
+      push @$a, $eee if $f != 2;
+      }  
+    }
+  closedir( $dir );
+}
+
+# fast file tree walk
+# first argument can be options hash and is optional
+# rest of arguments are directory names to be walked
+# options hash can have:
+# ARRAY => hashref_for_result_list
+# MODE  => ALL   or 0 to scan all files and dirs
+# MODE  => FILES or 1 to scan files only
+# MODE  => DIRS  or 2 to scan directories only
+sub fftwalk
+{
+  my $opt = hash_uc( ref( $_[0] ) eq 'HASH' ? shift : {} );
+  
+  my $f;
+  $f = 0 if $opt->{ 'MODE' } =~ /^(A(LL)?|0|\*|FD|DF)$/i;
+  $f = 1 if $opt->{ 'MODE' } =~ /^(F(ILES)?|1)$/i;
+  $f = 2 if $opt->{ 'MODE' } =~ /^(D(IRS)?|2)$/i;
+
+  my $e = $opt->{ 'ARRAY' } ? $opt->{ 'ARRAY' } : [];
+
+  __fftwalk( $_, $e, $f ) for @_;
+  return $e;
 }
 
 ##############################################################################
