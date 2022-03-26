@@ -1,5 +1,10 @@
 Revision history for Perl extension Data::Tools
 
+1.25 2022-02-08
+
+    - added new ftwalk
+    - fixed str_html_escape (well typo)
+
 1.24 2020-06-22
 
     - reimplemented str_hex/unhex to use unpack/pack (of course!)
