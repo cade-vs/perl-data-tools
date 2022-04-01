@@ -205,10 +205,8 @@ check Data::Validate::Struct module by Thomas Linden, cheers :)
 # AUTHOR
 
     Vladi Belperchinov-Shabanski "Cade"
-
-    <cade@biscom.net> <cade@datamax.bg> <cade@cpan.org>
-
-    http://cade.datamax.bg
+          <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+    http://cade.noxrun.com/  
 # NAME
 
     Data::Tools::Socket provides set of socket I/O functions.
@@ -297,10 +295,8 @@ Data::Tools::Socket uses:
 # AUTHOR
 
     Vladi Belperchinov-Shabanski "Cade"
-
-    <cade@biscom.net> <cade@datamax.bg> <cade@cpan.org>
-
-    http://cade.datamax.bg
+  #        <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+  #  http://cade.noxrun.com/  
 # NAME
 
     Data::Tools::Time provides set of basic functions for time processing.
@@ -322,9 +318,20 @@ Data::Tools::Socket uses:
     my $date_diff_str_rel = julian_date_diff_in_words_relative( $date1 - $date2 );
 
     # --------------------------------------------------------------------------
+
+    # return seconds after last midnight, i.e. current day time
+    my $seconds_in_the_current_day = get_local_time_only()
+    
+    # returns current julian day
+    my $jd = get_local_julian_day()
+    
+    # returns current year
+    my $year = get_local_year()
     
     # gets current julian date, needs Time::JulianDay
     my $jd = local_julian_day( time() );
+    # or
+    my $jd = get_local_julian_day();
 
     # move current julian date to year ago, one month ahead and 2 days ahead
     $jd = julian_date_add_ymd( $jd, -1, 1, 2 );
@@ -432,10 +439,8 @@ I know this is no good for longer sentences but works fine in this case.
 # AUTHOR
 
     Vladi Belperchinov-Shabanski "Cade"
-
-    <cade@bis.bg> <cade@biscom.net> <cade@datamax.bg> <cade@cpan.org>
-
-    http://cade.datamax.bg
+          <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+    http://cade.noxrun.com/  
 # NAME
 
     Data::Tools::Math provides set of basic functions for mathematics.
@@ -481,7 +486,80 @@ Data::Tools::Time uses:
 # AUTHOR
 
     Vladi Belperchinov-Shabanski "Cade"
+          <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+    http://cade.noxrun.com/  
+# NAME
 
-    <cade@bis.bg> <cade@biscom.net> <cade@datamax.bg> <cade@cpan.org>
+    Data::Tools::CSV -- compact, pure-perl CSV parsing
 
-    http://cade.datamax.bg
+# SYNOPSIS
+
+    use Data::Tools::CSV qw( :all );  # import all functions
+    use Data::Tools::CSV;             # the same as :all :) 
+    use Data::Tools::CSV qw( :none ); # do not import anything
+
+    # --------------------------------------------------------------------------
+
+    my $array_of_arrays = parse_csv( $csv_data_string );
+    my @single_line     = parse_csv_line( $single_csv_line );
+    
+    while( <$fh> )
+      {
+      parse_csv_line( $_ );
+      ...  
+      }
+
+    # hash keys names are mapped from the first line of $csv_data (head)
+    my @array_of_hashes = parse_csv_to_hash_array( $csv_data );
+
+    # --------------------------------------------------------------------------
+
+# FUNCTIONS
+
+## parse\_csv( $csv\_data\_string )
+
+Parses multi-line CSV text
+
+## parse\_csv\_line( $single\_csv\_line )
+
+Parses single line CSV data.
+
+## parse\_csv\_to\_hash\_array( $csv\_data )
+
+This function uses first line as hash key names to produce array of hashes
+for the rest of the data.
+
+    NOTE: Lines with more data than header will discard extra data.
+    NOTE: Lines with less data than header will produce keys with undef values.
+
+# IMPLEMENTATION DETAILS
+
+Data::Tools::CSV is pure-perl implementation and has compact code.
+It parses RFC4180 style CSV files:
+
+    https://www.ietf.org/rfc/rfc4180.txt
+    
+
+RFC4180 says:
+
+    * lines are CRLF delimited, however CR or LF-only are accepted as well.
+    * whitespace is data, will not be stripped.
+    * whitespace and delimiters can be quoted with double quotes (").
+    * quotes in quoted text should be doubled ("") as escaping.
+
+# FEEDBACK
+
+Please, report any bugs or missing features as long as they follow RFC4180.
+
+# GITHUB REPOSITORY
+
+    git@github.com:cade-vs/perl-data-tools.git
+    
+    git clone git://github.com/cade-vs/perl-data-tools.git
+    
+
+# AUTHOR
+
+    Vladi Belperchinov-Shabanski "Cade"
+          <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+    http://cade.noxrun.com/  

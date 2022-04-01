@@ -1,9 +1,9 @@
 ##############################################################################
 #
 #  Data::Tools perl module
-#  2013-2022 (c) Vladi Belperchinov-Shabanski "Cade"
-#  http://cade.datamax.bg
-#  <cade@bis.bg> <cade@cpan.org> <shabanski@gmail.com> 
+#  Copyright (c) 2013-2022 Vladi Belperchinov-Shabanski "Cade" 
+#        <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+#  http://cade.noxrun.com/  
 #
 #  GPL
 #
@@ -21,7 +21,7 @@ use MIME::Base64;
 use File::Glob;
 use Hash::Util qw( lock_hashref unlock_hashref lock_ref_keys );
 
-our $VERSION = '1.26';
+our $VERSION = '1.27';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
@@ -120,6 +120,8 @@ our @EXPORT = qw(
               ref_thaw
 
               fork_exec_cmd
+              
+              parse_csv
             );
 
 our %EXPORT_TAGS = (
@@ -1281,10 +1283,8 @@ check Data::Validate::Struct module by Thomas Linden, cheers :)
 =head1 AUTHOR
 
   Vladi Belperchinov-Shabanski "Cade"
-
-  <cade@biscom.net> <cade@datamax.bg> <cade@cpan.org>
-
-  http://cade.datamax.bg
+        <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+  http://cade.noxrun.com/  
 
 
 =cut
