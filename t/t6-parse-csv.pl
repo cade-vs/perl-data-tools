@@ -5,7 +5,7 @@ use Data::Tools::CSV;
 use Data::Dumper;
 
 my $csv = <<END;
-TEST,IS,HERE,NOPE,THERE
+TEST,IS,HERE,NOPE,"" THERE "
 123,is,testing,"""The"" book, is now",qwerty
 "1997","Ford","E350"
 1997,Ford,E350,"Super, ""luxurious"" truck"
