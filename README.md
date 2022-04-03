@@ -295,8 +295,8 @@ Data::Tools::Socket uses:
 # AUTHOR
 
     Vladi Belperchinov-Shabanski "Cade"
-  #        <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
-  #  http://cade.noxrun.com/  
+          <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+    http://cade.noxrun.com/  
 # NAME
 
     Data::Tools::Time provides set of basic functions for time processing.
