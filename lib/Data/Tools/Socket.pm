@@ -266,8 +266,8 @@ Data::Tools::Socket uses:
 =head1 AUTHOR
 
   Vladi Belperchinov-Shabanski "Cade"
-#        <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
-#  http://cade.noxrun.com/  
+        <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+  http://cade.noxrun.com/  
 
 
 =cut

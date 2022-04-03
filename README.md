@@ -534,8 +534,8 @@ for the rest of the data.
 
 # IMPLEMENTATION DETAILS
 
-Data::Tools::CSV is pure-perl implementation and has compact code.
-It parses RFC4180 style CSV files:
+Data::Tools::CSV is compact, pure-perl implementation of a CSV parser of
+RFC4180 style CSV files:
 
     https://www.ietf.org/rfc/rfc4180.txt
     
@@ -543,9 +543,18 @@ It parses RFC4180 style CSV files:
 RFC4180 says:
 
     * lines are CRLF delimited, however CR or LF-only are accepted as well.
-    * whitespace is data, will not be stripped.
+    * whitespace is data, will not be stripped (2.4).
     * whitespace and delimiters can be quoted with double quotes (").
     * quotes in quoted text should be doubled ("") as escaping.
+
+# KNOWN BUGS
+
+This implementation does not support multiline fields (lines split),
+as described in RFC4180, (2.6).
+
+There is no much error handling. However the code makes reasonable effort
+to handle properly all the data provided. This may seem vague but the CSV 
+format itself is vague :)
 
 # FEEDBACK
 
