@@ -36,6 +36,7 @@ our @EXPORT = qw(
                 julian_date_add_ymd
                 julian_date_to_ymd
                 julian_date_from_ymd
+                julian_date_from_md
 
                 julian_date_goto_first_dom
                 julian_date_goto_last_dom
@@ -224,6 +225,11 @@ sub get_year_month_days
   return Days_in_Month( @_ );
 }
 
+sub julian_date_from_utime
+{
+  return local_julian_day( shift() );
+}
+
 # return julian date, moved with positive or negative deltas ( y, m, d ) 
 sub julian_date_add_ymd
 {
@@ -255,11 +261,31 @@ sub julian_date_to_ymd
 sub julian_date_from_ymd
 {
   my $y = shift; # set year
-  my $m = shift; # set month
-  my $d = shift; # set day
+  my $m = shift || 1; # set month
+  my $d = shift || 1; # set day
 
   my $wd = julian_day( $y, $m, $d );
   return $wd;
+}
+
+# return julian date from month and day only 
+# finds closest date which matches, regardless if it is in the future or past
+sub julian_date_from_md
+{
+  my $mon = shift;
+  my $day = shift;
+
+  my $now = local_julian_day( time() );
+  my ( $cy ) = julian_date_to_ymd( $now );
+  
+  my $cd = julian_date_from_ymd( $cy, $mon, $day );
+
+  return $cd if $now == $cd;
+
+  my $oy = $cy + ( $cd > $now ? -1 : +1 );
+  my $od = julian_date_from_ymd( $oy, $mon, $day );
+
+  return abs( $cd - $now ) < abs( $od - $now ) ? $cd : $od;
 }
 
 # return julian date, moved to the first day of its month
@@ -321,7 +347,7 @@ sub utime_from_ymdhms
 
 sub utime_to_ymdhms
 {
-  return Localtime(shift());
+  return Localtime( shift() );
 }
 
 # returns local julian day and time from unix time
