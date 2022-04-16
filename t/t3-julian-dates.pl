@@ -43,6 +43,13 @@ my $mdays = julian_date_month_days_ym( $y, $m );
 
 print "mdays ( $mdays )\n";
 
+my $jd = julian_date_to_iso( julian_date_from_ymd( 2022 ) );
+
+print "julian_date_from_ymd( 2022 ): $jd\n";
+
+my $jd = julian_date_to_iso( julian_date_from_md( 10, 11 ) );
+
+print "julian_date_from_md( mm, dd ): $jd\n";
 
 
 ##############################################################################

@@ -1,6 +1,6 @@
 ##############################################################################
 #
-#  Data::Tools perl module
+#  Data::Tools::Time perl module
 #  Copyright (c) 2013-2022 Vladi Belperchinov-Shabanski "Cade" 
 #        <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
 #  http://cade.noxrun.com/  
@@ -16,7 +16,7 @@ use Data::Tools;
 use Date::Calc qw(:all);
 use Time::JulianDay;
 
-our $VERSION = '1.28';
+our $VERSION = '1.29';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
@@ -44,6 +44,8 @@ our @EXPORT = qw(
                 julian_date_month_days_ym
                 julian_date_month_days
                 julian_date_get_dow
+
+                julian_date_to_iso
 
                 utime_from_julian_date
                 utime_from_ymdhms
@@ -273,7 +275,7 @@ sub julian_date_from_ymd
 sub julian_date_from_md
 {
   my $mon = shift;
-  my $day = shift;
+  my $day = shift || 1;
 
   my $now = local_julian_day( time() );
   my ( $cy ) = julian_date_to_ymd( $now );
@@ -329,6 +331,11 @@ sub julian_date_month_days
   my $d = shift;
 
   return Days_in_Month( ( julian_date_to_ymd( $d ) )[0,1] );
+}
+
+sub julian_date_to_iso
+{
+  return join "-", julian_date_to_ymd( shift() );
 }
 
 ##############################################################################
