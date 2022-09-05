@@ -454,7 +454,7 @@ sub str_html_escape
 {
   my $text = shift;
 
-  $text =~ s/([<>`'])/$HTML_ESCAPES{ $1 }/ge;
+  $text =~ s/([<>`'&"\\])/$HTML_ESCAPES{ $1 }/ge;
   
   return $text;
 }
