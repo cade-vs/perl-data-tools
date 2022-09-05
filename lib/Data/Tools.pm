@@ -21,7 +21,7 @@ use MIME::Base64;
 use File::Glob;
 use Hash::Util qw( lock_hashref unlock_hashref lock_ref_keys );
 
-our $VERSION = '1.30';
+our $VERSION = '1.31';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
@@ -88,6 +88,8 @@ our @EXPORT = qw(
               str_url_unescape 
               
               str_html_escape 
+              str_html_escape_text 
+              str_html_escape_attr 
               str_html_unescape 
               
               str_hex 
@@ -448,6 +450,21 @@ my %HTML_ESCAPES = (
                    "&"  => '&amp;',
                    '"'  => '&quot;',
                    '\\' => '&#134;',
+                   '='  => '&#61;',
+                   );
+
+my %HTML_ESCAPES_TEXT = (
+                   '>'  => '&gt;',
+                   '<'  => '&lt;',
+                   );
+
+my %HTML_ESCAPES_ATTR = (
+                   '>'  => '&gt;',
+                   '<'  => '&lt;',
+                   "'"  => '&rsquo;',
+                   "`"  => '&lsquo;',
+                   '"'  => '&quot;',
+                   '='  => '&#61;',
                    );
 
 sub str_html_escape
@@ -455,6 +472,24 @@ sub str_html_escape
   my $text = shift;
 
   $text =~ s/([<>`'&"\\])/$HTML_ESCAPES{ $1 }/ge;
+  
+  return $text;
+}
+
+sub str_html_escape_text
+{
+  my $text = shift;
+
+  $text =~ s/([<>`'&"\\])/$HTML_ESCAPES_TEXT{ $1 }/ge;
+  
+  return $text;
+}
+
+sub str_html_escape_attr
+{
+  my $text = shift;
+
+  $text =~ s/([<>`'&"\\])/$HTML_ESCAPES_ATTR{ $1 }/ge;
   
   return $text;
 }
