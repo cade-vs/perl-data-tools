@@ -22,7 +22,9 @@ our @ISA    = qw( Exporter );
 our @EXPORT = qw(
 
                 unix_time_diff_in_words
+                unix_time_diff_in_words_short
                 unix_time_diff_in_words_relative
+                unix_time_diff_in_words_relative_short
     
                 julian_date_diff_in_words
                 julian_date_diff_in_words_relative
@@ -130,11 +132,49 @@ sub unix_time_diff_in_words
     }
 }
 
-sub unix_time_diff_in_words_relative
+sub unix_time_diff_in_words_short
 {
-  my $utd = int( shift() ); # relative difference in seconds
+  my $utd = abs( int( shift() ) ); # absolute difference in seconds
 
-  my $uts = unix_time_diff_in_words( $utd );
+  if( $utd < 1 )
+    {
+    return "now";
+    }
+  if( $utd < 60   ) # less than 1 minute
+    {
+    my $ss = str_countable( $utd, "second", "seconds" );
+    return "$utd $ss";
+    };
+  if( $utd < 60*60 ) # less than 1 hour
+    {
+    my $m  = int( $utd / 60 );
+    my $ms = str_countable( $m, "minute", "minutes" );
+    return "$m $ms";
+    };
+  if( $utd < 2*24*60*60 ) # less than 2 days (48 hours)
+    {
+    my $h = int( $utd / ( 60 * 60 ) );
+    my $hs = str_countable( $h, "hour",   "hours"   );
+    return "$h $hs";
+    };
+  if( $utd < 60*24*60*60 ) # less than 2 months
+    {
+    my $d  = int( $utd / ( 24 * 60 * 60 ) );
+    my $ds = str_countable( $d, "day",    "days"    );
+    return "$d $ds";
+    };
+  if( 42 ) # more than 2 months
+    {
+    my $m  = int( $utd / ( 30*24*60*60 ) ); # "month" is approximated to 30 days
+    my $ms = str_countable( $m, "month", "months" );
+    return "$m $ms";
+    }
+}
+
+sub __relative_str
+{
+  my $utd = shift(); # relative difference in seconds
+  my $uts = shift(); # relative difference in words
 
   if( $utd < 0 )
     {
@@ -148,6 +188,24 @@ sub unix_time_diff_in_words_relative
     {
     return $uts;
     }
+}
+
+sub unix_time_diff_in_words_relative
+{
+  my $utd = int( shift() ); # relative difference in seconds
+
+  my $uts = unix_time_diff_in_words( $utd );
+
+  return __relative_str( $utd, $uts );
+}
+
+sub unix_time_diff_in_words_relative_short
+{
+  my $utd = int( shift() ); # relative difference in seconds
+
+  my $uts = unix_time_diff_in_words_short( $utd );
+
+  return __relative_str( $utd, $uts );
 }
 
 ##############################################################################
