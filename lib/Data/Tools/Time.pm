@@ -16,7 +16,7 @@ use Data::Tools;
 use Date::Calc qw(:all);
 use Time::JulianDay;
 
-our $VERSION = '1.30';
+our $VERSION = '1.31';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
@@ -373,7 +373,7 @@ sub julian_date_get_day
 {
   my $d = shift; # original date
 
-  my ( $y, $m, $d ) = julian_date_to_ymd( $wd );
+  my ( $y, $m, $d ) = julian_date_to_ymd( $d );
   return $d;
 }
 
@@ -382,7 +382,7 @@ sub julian_date_get_month
 {
   my $d = shift; # original date
 
-  my ( $y, $m, $d ) = julian_date_to_ymd( $wd );
+  my ( $y, $m, $d ) = julian_date_to_ymd( $d );
   return $m;
 }
 
@@ -391,7 +391,7 @@ sub julian_date_get_year
 {
   my $d = shift; # original date
 
-  my ( $y, $m, $d ) = julian_date_to_ymd( $wd );
+  my ( $y, $m, $d ) = julian_date_to_ymd( $d );
   return $y;
 }
 
