@@ -41,6 +41,9 @@ our @EXPORT = qw(
               file_text_load
               file_text_load_ar
 
+              cmd_read_from
+              cmd_write_to
+
               file_mtime
               file_ctime
               file_atime
@@ -122,8 +125,6 @@ our @EXPORT = qw(
               ref_thaw
 
               fork_exec_cmd
-              
-              parse_csv
             );
 
 our %EXPORT_TAGS = (
@@ -305,6 +306,30 @@ sub file_text_save
   close $o;
   return 1;
 }
+
+##############################################################################
+
+sub cmd_read_from
+{
+  my @args = ref( $_[0] ) ? @{ $_[0] } : @_;
+
+  open( my $i, "-|", @args ) or return undef;
+  local $/ = undef;
+  my $s = <$i>;
+  close $i;
+  return $s;
+}
+
+sub cmd_write_to
+{
+  my @args = ref( $_[0] ) ? @{ $_[0] } : @_;
+  
+  open( my $o, "|-", @args ) or return undef;
+  print $o @_;
+  close $o;
+  return 1;
+}
+
 
 ##############################################################################
 

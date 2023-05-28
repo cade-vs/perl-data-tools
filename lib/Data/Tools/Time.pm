@@ -43,9 +43,11 @@ our @EXPORT = qw(
                 julian_date_goto_first_dom
                 julian_date_goto_last_dom
                 julian_date_get_dow
+                julian_date_get_day
+                julian_date_get_month
+                julian_date_get_year
                 julian_date_month_days_ym
                 julian_date_month_days
-                julian_date_get_dow
 
                 julian_date_to_iso
 
@@ -364,6 +366,33 @@ sub julian_date_goto_last_dom
 
   my ( $y, $m, $d ) = julian_date_to_ymd( $wd );
   return julian_date_from_ymd( $y, $m, Days_in_Month( $y, $m ) );
+}
+
+# return day of the month, 1 .. 31
+sub julian_date_get_day
+{
+  my $d = shift; # original date
+
+  my ( $y, $m, $d ) = julian_date_to_ymd( $wd );
+  return $d;
+}
+
+# return month of the year, 1 .. 12
+sub julian_date_get_month
+{
+  my $d = shift; # original date
+
+  my ( $y, $m, $d ) = julian_date_to_ymd( $wd );
+  return $m;
+}
+
+# return year of the given date
+sub julian_date_get_year
+{
+  my $d = shift; # original date
+
+  my ( $y, $m, $d ) = julian_date_to_ymd( $wd );
+  return $y;
 }
 
 # return day of the week, for julian date -- 0 Sun .. 6 Sat
