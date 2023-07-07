@@ -21,7 +21,7 @@ use MIME::Base64;
 use File::Glob;
 use Hash::Util qw( lock_hashref unlock_hashref lock_ref_keys );
 
-our $VERSION = '1.31';
+our $VERSION = '1.40';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
@@ -81,6 +81,9 @@ our @EXPORT = qw(
               hash_lock_recursive
               hash_unlock_recursive
               hash_keys_lock_recursive
+              
+              hr_traverse_vals
+              ar_traverse_vals
               
               list_uniq
 
@@ -906,6 +909,61 @@ sub hash_keys_lock_recursive
     }
 
   return $hr;  
+}
+
+sub hr_traverse_vals
+{
+  my $hr  = shift;
+  my $sub = shift;
+  
+  for( keys %$hr )
+    {
+    my $v = $hr->{ $_ };
+    my $r = ref( $v );
+    if( $r eq 'HASH' )
+      {
+      hr_traverse_vals( $v, $sub );
+      }
+    elsif( $r eq 'ARRAY' )
+      {
+      ar_traverse_vals( $v, $sub );
+      }
+    elsif( $r eq '' )
+      {
+      $hr->{ $_ } = $sub->( $v );
+      }
+    else
+      {
+      confess "unsupported VALUE TYPE";
+      }  
+    }
+}
+
+sub ar_traverse_vals
+{
+  my $ar = shift;
+  my $sub = shift;
+  
+  for( @$ar )
+    {
+    my $r = ref( $_ );
+    if( $r eq 'HASH' )
+      {
+      hr_traverse_vals( $_, $sub );
+      }
+    elsif( $r eq 'ARRAY' )
+      {
+      ar_traverse_vals( $_, $sub );
+      }
+    elsif( $r eq '' )
+      {
+      $_ = $sub->( $_ );
+      }
+    else
+      {
+      confess "unsupported VALUE TYPE";
+      }  
+    }
 }
 
 ##############################################################################
