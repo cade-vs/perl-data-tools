@@ -1,7 +1,7 @@
 ##############################################################################
 #
 #  Data::Tools perl module
-#  Copyright (c) 2013-2022 Vladi Belperchinov-Shabanski "Cade" 
+#  Copyright (c) 2013-2024 Vladi Belperchinov-Shabanski "Cade" 
 #        <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
 #  http://cade.noxrun.com/  
 #
@@ -38,6 +38,7 @@ our @EXPORT = qw(
               file_bin_load
 
               file_text_save
+              file_text_append
               file_text_load
               file_text_load_ar
 
@@ -310,6 +311,21 @@ sub file_text_save
   return 1;
 }
 
+sub file_text_append
+{
+  my $fn = shift; # file name
+  
+  my $o;
+  my $enc = ":encoding($TEXT_IO_ENCODING)" if $TEXT_IO_ENCODING;
+  open( $o, ">>$enc", $fn ) or return 0;
+  binmode( $o ) unless $TEXT_IO_ENCODING;
+  print $o @_;
+  close $o;
+  return 1;
+}
+
+
+
 ##############################################################################
 
 sub cmd_read_from
@@ -401,8 +417,8 @@ sub dir_path_make
   for my $p ( @path )
     {
     $path .= "$p/";
-    next if -d $path;
-    mkdir( $path, $mask ) or return 0;
+    mkdir( $path, $mask ); # should check if EEXISTS but still the same outcome
+    return 0 unless -d $path;
     }
   return 1;
 }
