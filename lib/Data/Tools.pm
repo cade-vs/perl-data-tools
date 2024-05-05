@@ -123,7 +123,20 @@ our @EXPORT = qw(
               
               glob_tree
               read_dir_entries
+
               fftwalk
+                  
+                  FFT_FILES
+                  FFT_DIRS
+                  
+                  FFT_SYMF
+                  FFT_SYMD
+                  
+                  FFT_FOLLOW
+
+                  FFT_ALL
+                  FFT_ALL4
+                  FFT_FULL
               
               ref_freeze
               ref_thaw
@@ -1115,11 +1128,26 @@ sub read_dir_entries
 
 ##############################################################################
 
+use constant 
+{
+    FFT_FILES  => 0x01,
+    FFT_DIRS   => 0x02,
+    
+    FFT_SYMF   => 0x04, # allow symlink files in result (requires FFT_FILES)
+    FFT_SYMD   => 0x08, # allow symlink dirs in result  (requires FFT_DIRS )
+    
+    FFT_FOLLOW => 0x10,
+
+    FFT_ALL    => 0x01 | 0x02,
+    FFT_ALL4   => 0x01 | 0x02 | 0x04 | 0x08,
+    FFT_FULL   => 0x01 | 0x02 | 0x04 | 0x08 | 0x10,
+};
+
 sub __fftwalk
 {
-  my $e = shift;
-  my $a = shift;
-  my $f = shift; # filter: 0 all, 1 files, 2 dirs
+  my $e  = shift;
+  my $a  = shift;
+  my $ty = shift; # typemap, see FFTs above
   
   opendir( my $dir, $e ) or return undef;
   my $ee;
@@ -1128,41 +1156,62 @@ sub __fftwalk
     next if $ee eq '.' or $ee eq '..';
     my $eee = "$e/$ee";
     
-    next if -l $eee; # FIXME: TODO: OPTION!!!!!!!!!
-    
-    if( -d $eee )
+    my $is_dir  = -d $eee;
+    my $is_link = -l $eee;
+
+    if( $is_dir )
       {
-      push @$a, $eee if $f != 1;
-      __fftwalk( $eee, $a, $f );
+      push @$a, $eee if $is_link ? $ty & FFT_DIRS && $ty & FFT_SYMD : $ty & FFT_DIRS;
+      __fftwalk( $eee, $a, $ty ) if ! $is_link or $ty & FFT_FOLLOW;
       }
     else
       {
-      push @$a, $eee if $f != 2;
+      push @$a, $eee if $is_link ? $ty & FFT_FILES && $ty & FFT_SYMF : $ty & FFT_FILES;
       }  
     }
   closedir( $dir );
 }
 
 # fast file tree walk
-# first argument can be options hash and is optional
+# first argument traversal typemap scalar or hash with options
 # rest of arguments are directory names to be walked
 # options hash can have:
-# ARRAY => hashref_for_result_list
-# MODE  => ALL   or 0 to scan all files and dirs
-# MODE  => FILES or 1 to scan files only
-# MODE  => DIRS  or 2 to scan directories only
+#   TYPE  => typemap
+# this option tells which types of filesystem entries to be processed:
+#   FFT_FILES  -- add found files
+#   FFT_DIRS   -- add found directories
+#   FFT_SYMF   -- add found file symlinks (needs FFT_FILES)
+#   FFT_SYMD   -- add found dir  symlinks (needs FFT_DIRS )
+#   FFT_FOLLOW -- follow/traverse symlink dirs
+# there are few shortcut options:
+#   FFT_ALL    -- all files and dirs but no symlinks
+#   FFT_ALL4   -- all files and dirs including symlinks
+#   FFT_FULL   -- all files, dirs, symlinks and follow symlink dirs
+# if TYPE is zero, fftwalk will not do anything
+#   ARRAY => hashref_for_result_list
+
 sub fftwalk
 {
-  my $opt = hash_uc( ref( $_[0] ) eq 'HASH' ? shift : {} );
+  my $ty = shift;
+
+  my $opt = {};
+  if( ref( $ty ) eq 'HASH' )
+    {
+    $opt = $ty;
+    $ty = $opt->{ 'TYPE' };
+    }
+  else
+    {
+    $opt = {};
+    }  
   
-  my $f;
-  $f = 0 if $opt->{ 'MODE' } =~ /^(A(LL)?|0|\*|FD|DF)$/i;
-  $f = 1 if $opt->{ 'MODE' } =~ /^(F(ILES)?|1)$/i;
-  $f = 2 if $opt->{ 'MODE' } =~ /^(D(IRS)?|2)$/i;
+  die "fftwalk() uses TYPE instead of MODE" if $opt->{ 'MODE' };
 
   my $e = $opt->{ 'ARRAY' } ? $opt->{ 'ARRAY' } : [];
 
-  __fftwalk( $_, $e, $f ) for @_;
+  return $e unless $ty > 0; # do nothing if TYPE is zero
+
+  __fftwalk( $_, $e, $ty ) for @_;
   return $e;
 }
 
