@@ -106,6 +106,9 @@ our @EXPORT = qw(
               str_pad
               str_pad_center
               str_countable
+
+              str_kmg_to_num
+              str_hms_to_secs
               
               str_password_strength
 
@@ -616,6 +619,32 @@ sub str_countable
   my $many  = shift;
 
   return $count == 0 ? $many : $count == 1 ? $one : $many;
+}
+
+sub str_kmg_to_num
+{
+  my $s = uc shift;
+  return undef unless $s =~ /^\s*(\d+(\.\d*)?)(\s*([KMGTP]))?/;
+  return $1 unless $4;
+  return $1 * ( 1024 ** ( index( 'KMGTP', $4 ) + 1 ) );
+}
+
+sub str_hms_to_secs
+{
+  my $s = uc shift;
+  
+  my $secs;
+  $s .= 's' if $s =~ /^[\s\d]+$/;
+  while( $s =~ /(\d+)\s*([WDHMS])/gi )
+    {
+    if   ( lc $2 eq 's' ) { $secs += $1; }
+    elsif( lc $2 eq 'm' ) { $secs += $1 * 60; }
+    elsif( lc $2 eq 'h' ) { $secs += $1 * 60 * 60; }
+    elsif( lc $2 eq 'd' ) { $secs += $1 * 60 * 60 * 24; }
+    elsif( lc $2 eq 'w' ) { $secs += $1 * 60 * 60 * 24 * 7; }
+    }
+  
+  return $secs;
 }
 
 ##############################################################################
@@ -1393,6 +1422,10 @@ INIT  { __url_escapes_init(); }
                       # returns 'days' for $dc == 0
                       # returns 'day'  for $dc == 1
                       # returns 'days' for $dc >  1
+
+  my $num = str_kmg_to_num(   '1K' ); # returns 1024   
+  my $num = str_kmg_to_num( '2.5M' ); # returns 2621440
+  my $num = str_kmg_to_num(   '1T' ); # returns 1099511627776
 
   # --------------------------------------------------------------------------
 
