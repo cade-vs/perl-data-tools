@@ -21,7 +21,7 @@ use MIME::Base64;
 use File::Glob;
 use Hash::Util qw( lock_hashref unlock_hashref lock_ref_keys );
 
-our $VERSION = '1.43';
+our $VERSION = '1.44';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
@@ -143,6 +143,13 @@ our @EXPORT = qw(
               
               ref_freeze
               ref_thaw
+
+              int2hex
+              hex2int
+              
+              bcd2int
+              int2bcd
+              bcd2str
 
             );
 
@@ -1267,6 +1274,58 @@ sub ref_thaw
 
 ##############################################################################
 
+sub int2hex
+{
+  return sprintf( "%X", shift );
+}
+
+*hex2int = *CORE::hex;
+
+##############################################################################
+
+sub bcd2int
+{
+  my $bcd = shift;
+  
+  my $int = 0;
+
+  my @bcd = unpack 'C*', $bcd;
+  my $p = @bcd * 2 - 1;
+  for( @bcd )
+    {
+    $int += ( 10 ** $p-- ) * ( ( $_ & 0xF0 ) >> 4 );
+    $int += ( 10 ** $p-- ) * ( ( $_ & 0x0F )      );
+    }
+
+  return $int;
+}
+
+sub int2bcd
+{
+  my $int = shift;
+  my $len = shift; # in how many bytes to produce bcd
+  
+  die "int2bcd() is not yet implemented";
+}
+
+sub bcd2str
+{
+  my $bcd = shift;
+  
+  my $str;
+
+  my @bcd = unpack 'C*', $bcd;
+  for( @bcd )
+    {
+    $str .= ( ( $_ & 0xF0 ) >> 4 );
+    $str .= ( ( $_ & 0x0F )      );
+    }
+
+  return $str;
+}
+
+##############################################################################
+
 # sub format_ascii_table
 
 ##############################################################################
@@ -1440,6 +1499,12 @@ INIT  { __url_escapes_init(); }
 
   # read directory entries names (without full paths)
   my @files_and_dirs = read_dir_entries( '/tmp/secret/dir' );
+
+  # --------------------------------------------------------------------------
+
+  my $int   = bcd2int( $bcd_bytes ); # convert BCD byte data to integer
+  my $bytes = int2bcd( $int );       # convert integer to BCD bytes
+  my $str   = bcd2str( $bcd_bytes ); # convert BCD byte data to string
 
 =head1 FUNCTIONS
 
