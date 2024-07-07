@@ -83,8 +83,10 @@ our @EXPORT = qw(
                 utime_goto_last_dom
                 utime_goto_first_doy
                 utime_goto_last_doy
+
                 utime_get_dow
                 utime_get_moy
+                utime_get_woy
                 
                 );
 
@@ -647,6 +649,14 @@ sub utime_get_moy
   my $tt = shift;
   my ( $year, $month, $day, $hour, $min, $sec ) = Localtime( $tt );
   return $month;
+}
+
+sub utime_get_woy
+{
+  my $tt = shift;
+  my ( $year, $month, $day, $hour, $min, $sec ) = Localtime( $tt );
+  my ( $week, $year ) = Week_of_Year( $year, $month, $day );
+  return wantarray ? ( $week, $year ) : $week;
 }
 
 ##############################################################################

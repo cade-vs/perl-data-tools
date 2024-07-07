@@ -13,6 +13,7 @@ Revision history for Perl extension Data::Tools
                 utime_from_iso
                 utime_to_iso_ext
                 utime_from_iso_ext
+                utime_get_woy
 
 1.44 2024-06-08
 
