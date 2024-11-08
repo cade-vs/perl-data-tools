@@ -107,6 +107,7 @@ sub pidfile_create
 
   return $opid if -e $fname;
 
+  dir_path_ensure( file_path( $fname ) );
   return -1 unless sysopen my $fh, $fname, O_CREAT | O_EXCL | O_RDWR, 0600;
 
   print $fh $$;
