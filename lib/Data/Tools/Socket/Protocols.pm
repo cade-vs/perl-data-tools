@@ -18,7 +18,7 @@ use Carp;
 use Data::Tools;
 use Data::Tools::Socket;
 
-our $VERSION = '1.44';
+our $VERSION = '1.45';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
