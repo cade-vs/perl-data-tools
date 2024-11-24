@@ -157,7 +157,8 @@ our @EXPORT = qw(
               bcd2int
               int2bcd
               bcd2str
-
+              
+              format_ascii_table
             );
 
 our %EXPORT_TAGS = (
@@ -1379,6 +1380,52 @@ sub bcd2str
 ##############################################################################
 
 # sub format_ascii_table
+# takes either arrayref-of-arraysrefs or arrayref-oh-hashrefs
+# first row is heading
+
+sub format_ascii_table
+{
+  my $data = shift;
+  
+  my @ws; # widths
+  my $wt; # width total
+  my $cs; # columns
+  
+  for my $row ( @$data )
+    {
+    my $c = 0;
+    for my $d ( @$row )
+      {
+      my $l = length( $d );
+      $ws[ $c ] = $l if $l > $ws[ $c ];
+      $c++;
+      }
+    $cs = $c if $c > $cs;
+    }
+  
+  $wt += $_ + 2 for @ws; # plus 2 for one char spacing around borders
+  $wt += @ws + 1; # plus border chars
+
+  my $sep = '+' . ( '-' x ( $wt - 2 ) ) . '+' . "\n";
+  my $tx;
+  
+  my $r = 0;
+  $tx .= $sep;
+  for my $row ( @$data )
+    {
+    $tx .= '|';
+    for my $c ( 0 .. $cs - 1 )
+      {
+      $tx .= ' ' . str_pad( $row->[ $c ], $ws[ $c ] ) . ' |';
+      }
+    $tx .= "\n";
+    $tx .= $sep if $r == 0;
+    $r++;
+    }
+  $tx .= $sep;
+  
+  return $tx;
+}
 
 ##############################################################################
 
