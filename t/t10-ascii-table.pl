@@ -12,6 +12,16 @@ my $t = [
         [ qw( fgh fgh tyj dsfg kio ) ],
         ];
 
-
+my $h = [
+             {
+             E => 'RE:\d+[a-f]*',  # regexp match
+             F => 'REI:\d+[a-f]*', # case insensitive regexp match
+             },
+             {
+             E => '123abc',
+             G => '456FFF',
+             },
+        ];
 
 print format_ascii_table( $t );
+print format_ascii_table( $h );

@@ -1386,6 +1386,8 @@ sub bcd2str
 sub format_ascii_table
 {
   my $data = shift;
+
+  $data = format_ascii_convert_aoh_to_aoa( $data ) if ref( $data->[ 0 ] ) eq 'HASH';
   
   my @ws; # widths
   my $wt; # width total
@@ -1425,6 +1427,27 @@ sub format_ascii_table
   $tx .= $sep;
   
   return $tx;
+}
+
+sub format_ascii_convert_aoh_to_aoa
+{
+  my $data = shift;
+  my @out;
+  
+  my %keys;
+  for my $row ( @$data )
+    {
+    $keys{ $_ }++ for keys %$row;
+    }
+  my @keys = sort keys %keys;
+  
+  push @out, \@keys;
+  for my $row ( @$data )
+    {
+    push @out, [ map { $row->{ $_ } } @keys ];
+    }
+  
+  return \@out;
 }
 
 ##############################################################################
