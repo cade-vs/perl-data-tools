@@ -22,7 +22,7 @@ use File::Glob;
 use Hash::Util qw( lock_hashref unlock_hashref lock_ref_keys );
 use Fcntl qw( :flock );
 
-our $VERSION = '1.45';
+our $VERSION = '1.46';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
@@ -1418,7 +1418,9 @@ sub format_ascii_table
     $tx .= '|';
     for my $c ( 0 .. $cs - 1 )
       {
-      $tx .= ' ' . str_pad( $row->[ $c ], $ws[ $c ] ) . ' |';
+      my $w = $ws[ $c ];
+      $w = - $w if $row->[ $c ] =~ /^([\+\-])?[\d\.]+$/; # only plain number, no exp
+      $tx .= ' ' . str_pad( $row->[ $c ], $w ) . ' |';
       }
     $tx .= "\n";
     $tx .= $sep if $r == 0;
