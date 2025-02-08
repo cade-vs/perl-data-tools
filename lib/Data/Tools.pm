@@ -22,7 +22,7 @@ use File::Glob;
 use Hash::Util qw( lock_hashref unlock_hashref lock_ref_keys );
 use Fcntl qw( :flock );
 
-our $VERSION = '1.46';
+our $VERSION = '1.47';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
@@ -118,6 +118,8 @@ our @EXPORT = qw(
               str_hms_to_secs
               
               str_password_strength
+              
+              str_capitalize
 
               perl_package_to_file
 
@@ -130,6 +132,7 @@ our @EXPORT = qw(
               sha1_hex_file
               
               create_random_id
+              create_random_binary
               
               glob_tree
               read_dir_entries
@@ -739,6 +742,14 @@ sub str_password_strength
 }
 
 ##############################################################################
+# takes one SCALAR, returns first letter in upper case and lower case the rest
+
+sub str_capitalize
+{
+  return uc( substr( $_[0], 0, 1 ) ) . lc( substr( $_[0], 1 ) );
+}  
+
+##############################################################################
 
 sub hash2str
 {
@@ -1169,6 +1180,15 @@ sub create_random_id
   my $id;
   $id .= substr( $let, int(rand() * $l), 1 ) for ( 1 .. $len );
   return $id;
+};
+
+sub create_random_binary
+{
+  my $len = shift();
+
+  my $bin;
+  $bin .= chr( int rand( 256 ) ) for ( 1 .. $len );
+  return $bin;
 };
 
 ##############################################################################
