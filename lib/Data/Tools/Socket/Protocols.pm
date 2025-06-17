@@ -92,7 +92,7 @@ sub socket_protocol_read_message
   my $hr = $proto->{ 'unpack' }->( substr( $data, 1 ) );
   confess "invalid data received from socket stream, expected HASH reference" unless ref( $hr ) eq 'HASH';
 
-  return wantarray ? ( $hr, $ptype, 'OK' ) : $hr;
+  return wantarray ? ( $hr, $ptype, undef ) : $hr;
 }
 
 sub socket_protocol_write_message
