@@ -77,7 +77,7 @@ sub socket_protocol_read_message
     }
   if( $data eq '' )  
     {
-    return wantarray ? ( undef, '?', 'E_EMPTY' ) : undef;
+    return wantarray ? ( undef, undef, 'E_EMPTY' ) : undef;
     }
 
   my $ptype = substr( $data, 0, 1 );
@@ -86,7 +86,7 @@ sub socket_protocol_read_message
 
   if( $opt and $opt->{ 'ALLOW_EMPTY_MESSAGE' } and substr( $data, 1 ) eq '' )
     {
-    return wantarray ? ( undef, undef, 'E_EMPTY' ) : undef;
+    return wantarray ? ( undef, $ptype, 'E_EMPTY' ) : undef;
     }
 
   my $hr = $proto->{ 'unpack' }->( substr( $data, 1 ) );
