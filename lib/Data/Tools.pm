@@ -560,7 +560,8 @@ sub str_url_escape
 {
   my $text = shift;
   
-  $text =~ s/([^ -\$\&-<>-~])/$URL_ESCAPES{$1}/gs;
+#  $text =~ s/([^ -\$\&-<>-~])/$URL_ESCAPES{$1}/gs;
+  $text =~ s/([^A-Za-z_0-9])/$URL_ESCAPES{$1}/gs; # strict
   return $text;
 }
 

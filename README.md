@@ -147,6 +147,10 @@
                         # returns 'day'  for $dc == 1
                         # returns 'days' for $dc >  1
 
+    my $num = str_kmg_to_num(   '1K' ); # returns 1024   
+    my $num = str_kmg_to_num( '2.5M' ); # returns 2621440
+    my $num = str_kmg_to_num(   '1T' ); # returns 1099511627776
+
     # --------------------------------------------------------------------------
 
     # find all *.txt files in all subdirectories starting from /usr/local
@@ -155,6 +159,12 @@
 
     # read directory entries names (without full paths)
     my @files_and_dirs = read_dir_entries( '/tmp/secret/dir' );
+
+    # --------------------------------------------------------------------------
+
+    my $int   = bcd2int( $bcd_bytes ); # convert BCD byte data to integer
+    my $bytes = int2bcd( $int );       # convert integer to BCD bytes
+    my $str   = bcd2str( $bcd_bytes ); # convert BCD byte data to string
 
 # FUNCTIONS
 
@@ -516,21 +526,41 @@ Data::Tools::Time uses:
 
 # FUNCTIONS
 
-## parse\_csv( $csv\_data\_string )
+In all functions the '$delim' argument is optional and sets the delimiter to
+be used. Default one is comma ',' (accordingly to RFC4180, see below).
 
-Parses multi-line CSV text
+In all functions the '$strip' argument should be true ("1" or non-zero string)
+to strip data from leading and trailing whitespace. If leading or trailing
+whitespace is required but stripping is needed to pad visually the data then
+actual data must be quoted:
 
-## parse\_csv\_line( $single\_csv\_line )
+    NAME,   TEL
+    jim,    123
+    boo,    "  413  "
+    
 
-Parses single line CSV data.
+second field will be \[TEL\] and data will be \[123\] and \[  413  \].
 
-## parse\_csv\_to\_hash\_array( $csv\_data )
+Unfortunately, for keeping API simple, using stripping will require $delim.
+However $delim may be undef to use default delimiter.
+
+## parse\_csv( $csv\_data\_string, $delim, $strip )
+
+Parses multi-line CSV text and returnsh hashref to array of arrays.
+
+## parse\_csv\_line( $single\_csv\_line, $delim, $strip )
+
+Parses single line CSV data and returns list of parsed fields' data. 
+This function will NOT strip trailing CR/LFs. However, parse\_csv() and 
+parse\_csv\_to\_hash\_array() will strip CR/LFs.
+
+## parse\_csv\_to\_hash\_array( $csv\_data, $delim, $strip )
 
 This function uses first line as hash key names to produce array of hashes
 for the rest of the data.
 
-    NOTE: Lines with more data than header will discard extra data.
-    NOTE: Lines with less data than header will produce keys with undef values.
+    NOTE: Lines with more data fields than header will discard extra data fields.
+    NOTE: Lines with less data fields than header will produce keys with undef values.
 
 # IMPLEMENTATION DETAILS
 
@@ -547,7 +577,7 @@ RFC4180 says:
     * whitespace and delimiters can be quoted with double quotes (").
     * quotes in quoted text should be doubled ("") as escaping.
 
-# KNOWN BUGS
+# KNOWN ISSUES
 
 This implementation does not support multiline fields (lines split),
 as described in RFC4180, (2.6).
