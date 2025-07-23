@@ -10,4 +10,4 @@ lib/Data/Tools/Time.pm
 lib/Data/Tools/Math.pm
 lib/Data/Tools/CSV.pm
 lib/Data/Tools/Process.pm
-
+lib/Data/Tools/Serialization.pm
