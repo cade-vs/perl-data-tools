@@ -121,6 +121,8 @@ our @EXPORT = qw(
               str_password_strength
               
               str_capitalize
+              
+              str_initials
 
               perl_package_to_file
 
@@ -759,12 +761,20 @@ sub str_password_strength
 }
 
 ##############################################################################
-# takes one SCALAR, returns first letter in upper case and lower case the rest
+# MISC string utils
 
+# takes one SCALAR, returns first letter in upper case and lower case the rest
 sub str_capitalize
 {
   return uc( substr( $_[0], 0, 1 ) ) . lc( substr( $_[0], 1 ) );
 }  
+
+# returns concatenated first letters of all words in the string
+# "James Webb Telescope" will return JWT
+sub str_initials
+{
+  return join '', $_[0] =~ /(\S)\S*/g;
+}
 
 ##############################################################################
 
