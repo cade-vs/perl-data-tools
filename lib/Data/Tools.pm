@@ -22,7 +22,7 @@ use File::Glob;
 use Hash::Util qw( lock_hashref unlock_hashref lock_ref_keys );
 use Fcntl qw( :flock );
 
-our $VERSION = '1.49';
+our $VERSION = '1.50';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
@@ -870,7 +870,7 @@ sub __hash_ulc
   my $hr  = shift;
   my $uc  = shift;
   my $ipl = shift;
-  
+
   my $nr = $ipl ? $hr : {};
   for my $k ( keys %$hr )
     {
