@@ -14,7 +14,7 @@ print "parent [$$]\n";
 my $c = 11;
 while( $c-- )
 {
-  forks_start_one( undef, \&ccc ) and next;
+  forks_start_one() and next;
 
   print "child [$$] $c started...\n";
   sleep 15 + int rand 5;
