@@ -86,7 +86,7 @@ sub forks_wait_one
     
     delete $__FORKS{ $pid };
 
-    print "    <-- exit ( $pid, $exit, $xsig, $name )\n";
+    # print "    <-- exit ( $pid, $exit, $xsig, $name )\n";
 
     return wantarray ? ( $pid, $exit, $xsig, $name ) : $pid;
     }
@@ -110,14 +110,14 @@ sub forks_start_one
 
   if( $pid )
     {
-    print "--> forked [$pid]\n";
+    # print "--> forked [$pid]\n";
     # parent here
     $__FORKS{ $pid } = $name;
     return $pid;
     }
   else
     {
-    print "           [$$] here\n";
+    # print "           [$$] here\n";
     }  
 
   # child here
