@@ -16,6 +16,8 @@ our $VERSION = '1.50';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
+
+                forks_setup_signals
                 
                 forks_start_one
                 forks_wait_one
@@ -36,11 +38,24 @@ our @EXPORT = qw(
 my $__MAX_FORKS = 4;
 my %__FORKS = ();         # maps pid to name (name is '*' for no-named-ones)
 
+sub __sig_handler_term
+{
+  forks_stop_all();
+  forks_wait_all();
+  exit 111;
+};
+
+sub forks_setup_signals
+{
+  $SIG{ 'INT'  } = \&__sig_handler_term;
+  $SIG{ 'TERM' } = \&__sig_handler_term;
+}
+
 sub forks_signal_all
 {
   my $sig = shift // return undef;
 
-  kill( $_, $sig ) for keys %__FORKS;
+  kill( $sig, keys %__FORKS );
 }
 
 sub forks_stop_all
@@ -87,6 +102,7 @@ sub forks_wait_one
     delete $__FORKS{ $pid };
 
     # print "    <-- exit ( $pid, $exit, $xsig, $name )\n";
+    # TODO: callback with ( $pid, $exit, $xsig, $name )
 
     return wantarray ? ( $pid, $exit, $xsig, $name ) : $pid;
     }

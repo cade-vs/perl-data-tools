@@ -5,7 +5,9 @@ use Data::Tools;
 use Data::Tools::Process::Forks;
 use Data::Dumper;
 
-forks_set_max( 6 );
+forks_set_max( 16 );
+
+forks_setup_signals();
 
 print "parent [$$]\n";
 
@@ -16,6 +18,7 @@ while( $c-- )
 {
   forks_start_one() and next;
 
+  $SIG{ 'INT'  } = $SIG{ 'TERM' } = sub { print "+++ exit [$$]\n" };
   print "child [$$] $c started...\n";
   sleep 15 + int rand 5;
   exit;
