@@ -5,22 +5,29 @@ use Data::Tools;
 use Data::Tools::Process::Forks;
 use Data::Dumper;
 
-forks_set_max( 16 );
-
+forks_set_max( 4 );
+forks_set_start_wait_to( 3 );
 forks_setup_signals();
 
 print "parent [$$]\n";
 
+print Data::Tools::Process::Forks::__get_max_machine_core_count();
 #-----------------------------------------------------------------------------
 
 my $c = 11;
 while( $c-- )
 {
-  forks_start_one() and next;
+  my $fr = forks_start_one();
+  if( $fr eq '0E0' )
+    {
+    print "fork error [$!] sleeping\n";
+    sleep 3;
+    }
+  next if $fr;  
 
   $SIG{ 'INT'  } = $SIG{ 'TERM' } = sub { print "+++ exit [$$]\n" };
   print "child [$$] $c started...\n";
-  sleep 15 + int rand 5;
+  sleep 11 + int rand 5;
   exit;
 }  
 
