@@ -441,8 +441,8 @@ to the parent process when forked one has blocked for some reason.
   my $c = forks_wait_all( 4 ); 
   
 
-internally it calls forks_wait_one( undef ) until internal forked processes
-count reaches 0.
+internally it calls forks_wait_one() until internal forked processes
+count reached 0 or timeout reached.
 
 =head2 Process Signalling
 
