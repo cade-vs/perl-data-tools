@@ -602,3 +602,417 @@ Please, report any bugs or missing features as long as they follow RFC4180.
     Vladi Belperchinov-Shabanski "Cade"
           <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
     http://cade.noxrun.com/  
+# NAME
+
+Data::Tools::Process::Forks - Fork process creation and control
+
+# SYNOPSIS
+
+    use Data::Tools::Process::Forks;
+
+    # set up signal handlers for graceful shutdown (optional)
+    forks_setup_signals();
+
+    # configure maximum concurrent forks (default is 8)
+    forks_set_max( 18 );
+
+    # case A: start simple worker processes
+    for my $task ( @tasks )
+      {
+      # this is the parent process, fork and continue
+      forks_start_one( 'THINKER' ) and next; 
+      
+      # here is the forked child process, do some work and exit:
+      # ...
+      exit 111;
+      # exit here is mandatory and omitting it would be a problem, 
+      # since it will start forking more processes from the child one!
+      # however it is the most simple use case.
+      }
+
+    # wait for all children to finish
+    forks_wait_all();
+
+
+
+    # case B: start worker processes with sub reference or closure
+    for my $task ( @tasks )
+      {
+      forks_start_one( 'GOPHER', \&fetch_things ); 
+      forks_start_one( 'PARSER', sub { call_parser(); cleanup(); } ); 
+      forks_start_one( undef, sub { print "Testing :)\n; return 222 " } ); 
+      }
+
+    # wait for all children to finish
+    forks_wait_all();
+
+# DESCRIPTION
+
+Data::Tools::Process::Forks provides a simple interface for managing multiple
+forked child processes. It handles the common patterns of limiting concurrent
+processes, tracking active children by name, and graceful shutdown via signals.
+
+The module keeps track of running and completed children when the maximum fork 
+count is reached, allowing new processes to start or wait for new open slot.
+
+# FUNCTIONS
+
+All functions are exported by default.
+
+## Signal Handling
+
+### forks\_setup\_signals()
+
+Installs signal handlers for `INT` and `TERM` signals. When either signal is
+received, the handler will send `TERM` to all child processes, wait for them
+to exit, then terminate the parent process with exit code 111.
+
+    forks_setup_signals();
+
+This is optional and should typically be called early in the parent process 
+before forking any children.
+
+## Process Creation and Waiting
+
+### forks\_start\_one( $name, $coderef, @args )
+
+Forks a new child process to execute the given subroutine.
+
+    my $pid = forks_start_one( 'worker', \&do_work, @work_args );
+
+**Parameters:**
+
+- `$name`
+
+    Optional name for the forked process, used for identification. Defaults to
+    `'*'` if not provided or undefined.
+
+- `$coderef`
+
+    Optional code reference to execute in the child. If provided, the child will
+    execute this subroutine and exit with its return value as the exit code.
+    If not provided, the function returns 0 in the child, allowing inline child
+    code (see SYNOPSIS).
+
+- `@args`
+
+    Optional arguments passed to `$coderef` when executed in the child.
+
+**Returns:**
+
+- In the parent: the child's PID on success, or `'0E0'` (true but zero) on
+fork failure. On fork failure and inline child prcesses, the parent will simply
+skip the child code and try to fork again. To avoid high load, save the result
+code and do something like:
+
+        my $fr = forks_start_one();
+        if( $fr eq '0E0' )
+          {
+          print "fork error [$!] sleeping\n";
+          sleep 3;
+          }
+        next if $fr;  
+        
+        # forked child here
+        exit 1;
+
+- In the child (when no `$coderef` provided): 0
+
+    To be sure code runs in the forked child process, return value must be checked
+    like this:
+
+        if( ! forks_start_one() )
+          {
+          # child here
+          # must finish with exit!
+          exit 2;
+          }
+
+    WARNING: return value should never be compared to 0, otherwise on fork errors, 
+    child code will be executed in the parent process!
+
+        if( forks_start_one() == 0 )
+          {
+          # WRONG! this will execute in the parent
+          # must finish with exit!
+          exit 2;
+          }
+        
+
+**Note:** If the current number of active forks equals or exceeds the maximum
+(see ["forks\_set\_max"](#forks_set_max)), this function blocks until a child exits before
+forking the new process.
+
+### forks\_wait\_one( $non\_blocking )
+
+Waits for one child process to exit.
+
+    # blocking, return all child attributes (list context)
+    my ( $pid, $exit_code, $signal, $name ) = forks_wait_one();
+    
+    # Non-blocking check, got pid only (scalar context)
+    my $pid = forks_wait_one( 1 );
+
+**Parameters:**
+
+- `$non_blocking`
+
+    If true, returns immediately if no child has exited (uses `WNOHANG`).
+    If false or omitted, blocks until a child exits.
+
+**Returns:**
+
+In list context: `( $pid, $exit_code, $signal, $name )`
+
+- `$pid`
+
+    The process ID of the exited child.
+
+- `$exit_code`
+
+    The exit code returned by the child (high 8 bits of `$?`).
+
+- `$signal`
+
+    The signal that terminated the child, if any (low 7 bits of `$?`).
+
+- `$name`
+
+    The name assigned to the child when it was forked.
+
+In scalar context: returns only `$pid`.
+
+Returns an empty list if no children have exited (non-blocking mode) or if
+there are no active children.
+
+### forks\_wait\_all( $timeout )
+
+Blocks until all active child processes have exited. Optional timeout in
+seconds can be specified to avoid blocking. Avoiding blocking may give control
+to the parent process when forked one has blocked for some reason.
+
+    # block until all forks finished
+    forks_wait_all(); 
+    
+    # or
+    
+    # wait 4 seconds for finished forks and return finished count
+    my $c = forks_wait_all( 4 ); 
+    
+
+internally it calls forks\_wait\_one( undef ) until internal forked processes
+count reaches 0.
+
+## Process Signalling
+
+### forks\_signal\_all( $signal )
+
+Sends the specified signal to all active child processes.
+
+    forks_signal_all( 'HUP' );
+    forks_signal_all( 15 );      # SIGTERM by number
+
+if signal is undef or empty parameter list, will do nothing and exit.
+
+**Parameters:**
+
+- `$signal`
+
+    The signal name or number to send.
+
+**Returns:** `undef` if no signal specified, otherwise the result of `kill()`.
+
+### forks\_stop\_all()
+
+Sends `TERM` signal to all active child processes.
+
+    forks_stop_all();
+
+Equivalent to `forks_signal_all( 'TERM' )`.
+
+### forks\_kill\_all()
+
+Sends `KILL` signal to all active child processes.
+
+    forks_kill_all();
+
+Equivalent to `forks_signal_all( 'KILL' )`. Use this for forceful termination
+when children do not respond to `TERM`.
+
+## Configuration
+
+### forks\_set\_max( $max )
+
+Sets the maximum number of concurrent child processes (slots).
+
+    forks_set_max( 16 );
+    
+
+**Parameters:**
+
+- `$max`
+
+    Maximum number of concurrent forks. Values less than 1 are clamped to 4.
+
+When ["forks\_start\_one"](#forks_start_one) is called and the current fork count (slots) equals 
+or exceeds this maximum, it will wait until a child exits before forking.
+
+Default value is 4.
+
+If called without parameters, will try to figure machine core count and set
+it the same. Note that this works only on machines with /proc file system 
+(i.e. Linux). if not Linux, /proc not mounted or other error will set to 8.
+
+### forks\_get\_max()
+
+Returns the current maximum fork limit.
+
+    my $max = forks_get_max();
+
+## Inspection
+
+### forks\_count()
+
+Returns the number of currently active child processes.
+
+    my $active = forks_count();
+    print "Running $active workers\n";
+
+### forks\_pids()
+
+Returns a list of PIDs for all active child processes.
+
+    my @pids = forks_pids();
+
+### forks\_names()
+
+Returns a list of unique names assigned to active child processes.
+
+    my @names = forks_names();
+
+Note that multiple processes may share the same name; this returns only
+unique names in use.
+
+### forks\_set\_start\_wait\_to( $timeout )
+
+This sets timeout for waiting for free slot when trying to start new fork but
+maximum count has been reached. Setting $timeout to 0 will enable blocking,
+i.e. forks\_start\_one() will wait until slot freed. If timeout reached
+forks\_start\_one() will return '0E0' (zero but true) which is same as fork 
+error.
+
+# EXAMPLES
+
+## Parallel Task Processing
+
+    use Data::Tools::Process::Forks;
+
+    forks_setup_signals();
+    forks_set_max( 6 );
+
+    my @files = glob( '*.dat' );
+
+    for my $file ( @files )
+      {
+      forks_start_one( 
+                       'processor', 
+                       sub 
+                          {
+                          process_file( $file );
+                          return 0;
+                          }
+                     );
+      }
+
+    forks_wait_all();
+    print "All files processed\n";
+
+## Worker Pool with Status Monitoring
+
+    use Data::Tools::Process::Forks;
+
+    forks_setup_signals();
+    forks_set_max( 11 );
+
+    # Start workers
+    for my $id ( 1 .. 20 )
+      {
+      forks_start_one( "worker-$id", \&worker_task, $id );
+      }
+
+    # Monitor progress
+    while( forks_count() > 0 )
+      {
+      my ( $pid, $exit, $sig, $name ) = forks_wait_one();
+      if( $exit == 0 )
+        {
+        print "$name completed successfully\n";
+        }
+      else
+        {
+        print "$name failed with exit code $exit\n";
+        }
+      }
+
+## Graceful Shutdown
+
+    use Data::Tools::Process::Forks;
+
+    forks_setup_signals();  # Handles INT/TERM automatically
+
+    # Or manual shutdown:
+    END
+      {
+      if( forks_count() > 0 )
+        {
+        print "Shutting down workers...\n";
+        forks_stop_all();
+        forks_wait_all();
+        }
+      }
+
+# NOTES
+
+- The module uses package-level variables to track state. Only one fork pool
+can be managed per process but fork names can represent separate fork pools.
+
+    This is really a design choice. This module was meant to be simple with
+    minimum dependencies (only Perl core Exporter and POSIX). 
+
+    For, possibly, more complex things you may check **Parralel::ForkManager** 
+    on **CPAN**.
+
+- Child processes reset the parent fork pool state so they can have own
+fork process pool and use this module themselves.
+- The `forks_start_one()` function may block indefinitely if child processes
+do not exit and the maximum fork count is reached. To avoid this situation
+`forks_set_start_wait_to()` can be used to set timeout for waiting for a free
+slot to be available while trying to start new one:
+
+        forks_set_start_wait_to( 4 );
+        my $fr = forks_start_one();
+        if( $fr eq '0E0' )
+          {
+          # either fork error occured
+          # or timeout waiting for free slot reached
+          ...
+          }
+
+# SEE ALSO
+
+[Parallel::ForkManager](https://metacpan.org/pod/Parallel%3A%3AForkManager), [fork(2)](http://man.he.net/man2/fork), [waitpid(2)](http://man.he.net/man2/waitpid), [POSIX](https://metacpan.org/pod/POSIX)
+
+# AUTHOR
+
+    Vladi Belperchinov-Shabanski "Cade"
+          <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+    http://cade.noxrun.com/  
+
+# COPYRIGHT AND LICENSE
+
+Copyright (c) 2013-2026 Vladi Belperchinov-Shabanski "Cade"
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
