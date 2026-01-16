@@ -1520,7 +1520,7 @@ INIT  { __url_escapes_init(); }
 
 =head1 NAME
 
-  Data::Tools provides set of basic functions for data manipulation.
+Data::Tools - Provides set of basic functions for data manipulation.
 
 =head1 SYNOPSIS
 
