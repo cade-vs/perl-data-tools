@@ -15,13 +15,14 @@ use Exporter;
 use POSIX;
 use Data::Tools;
 
-our $VERSION = '1.50';
+our $VERSION = '1.51';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
                   fork_exec_cmd
                   daemonize
                   
+                  pidfile_kill_and_remove
                   pidfile_create
                   pidfile_remove
                 );
@@ -83,6 +84,41 @@ sub daemonize
 }
 
 ##############################################################################
+
+# pidfile_kill_and_remove( $pid_file_name, signal_list... )
+# args:
+#    $pid_file_name -- file name of the pid file
+#    signal_list    -- list of signals to be sent to the pidfile's pid
+#                      if value has 's' at the end it is considered sleep time
+#                      in seconds between the signals. all are executed in the
+#                      given order:
+#                      15, 5s, 15, 2s, 9 -- send two TERM signals with 5 seconds
+#                      sleep and then wait 2 seconds and send KILL
+# returns:
+#    * undef if $pid_file_name does not exist
+#    * 1 if signals has been sent and $pid_file_name file removed
+
+sub pidfile_kill_and_remove
+{
+  my $fname   = shift;
+  my @siglist = @_;
+
+  return undef unless -e $fname;
+
+  @siglist = ( 15 ) unless @siglist;
+  
+  my $opid = int( file_load( $fname ) );
+  
+  for( @siglist )
+    {
+    sleep( $_ ), next if s/s$//;
+    kill( $_, $opid );
+    }
+  
+  unlink( $fname );
+  
+  return 1;
+}
 
 # pidfile_create( $pid_file_name, STALE_CHECK => 1 )
 #    STALE_CHECK is optional and will try to check if existing process is 
