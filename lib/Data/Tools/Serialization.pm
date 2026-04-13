@@ -39,8 +39,11 @@ our %EXPORT_TAGS = (
 
 BEGIN
 {
-  require XML::Bare;
-  require JSON;
+  eval
+    {
+    require XML::Bare;
+    require JSON;
+    };
 }
 
 sub xml2perl
