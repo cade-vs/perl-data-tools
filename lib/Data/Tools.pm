@@ -1,9 +1,9 @@
 ##############################################################################
 #
 #  Data::Tools perl module
-#  Copyright (c) 2013-2024 Vladi Belperchinov-Shabanski "Cade" 
+#  Copyright (c) 2013-2024 Vladi Belperchinov-Shabanski "Cade"
 #        <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
-#  http://cade.noxrun.com/  
+#  http://cade.noxrun.com/
 #
 #  GPL
 #
@@ -56,7 +56,7 @@ our @EXPORT = qw(
               file_name
               file_name_ext
               file_ext
-              
+
               file_lock
               file_lock_nb
               file_lock_ex
@@ -65,49 +65,49 @@ our @EXPORT = qw(
 
               dir_path_make
               dir_path_ensure
-              
-              str2hash 
+
+              str2hash
               hash2str
               hash2str_keys
 
               str2hash_url
               hash2str_url
               url2hash
-              
+
               hash_uc
               hash_lc
               hash_uc_ipl
               hash_lc_ipl
-              
+
               hash_save
               hash_load
               hash_save_keys
               hash_save_url
               hash_load_url
-              
+
               hash_validate
-              
+
               hash_lock_recursive
               hash_unlock_recursive
               hash_keys_lock_recursive
-              
+
               hr_traverse_vals
               ar_traverse_vals
-              
+
               list_uniq
 
-              str_escape 
-              str_unescape 
+              str_escape
+              str_unescape
 
-              str_url_escape 
-              str_url_unescape 
-              
-              str_html_escape 
-              str_html_escape_text 
-              str_html_escape_attr 
-              str_html_unescape 
-              
-              str_hex 
+              str_url_escape
+              str_url_unescape
+
+              str_html_escape
+              str_html_escape_text
+              str_html_escape_attr
+              str_html_unescape
+
+              str_hex
               str_unhex
 
               str_num_comma
@@ -117,11 +117,11 @@ our @EXPORT = qw(
 
               str_kmg_to_num
               str_hms_to_secs
-              
+
               str_password_strength
-              
+
               str_capitalize
-              
+
               str_initials
 
               perl_package_to_file
@@ -133,48 +133,48 @@ our @EXPORT = qw(
               wp_hex_file
               md5_hex_file
               sha1_hex_file
-              
+
               create_random_id
               create_random_binary
-              
+
               glob_tree
               read_dir_entries
 
               fftwalk
-                  
+
                   FFT_FILES
                   FFT_DIRS
-                  
+
                   FFT_SYMF
                   FFT_SYMD
-                  
+
                   FFT_FOLLOW
                   FFT_DEBUG
 
                   FFT_ALL
                   FFT_ALL4
                   FFT_FULL
-              
+
               ref_freeze
               ref_thaw
 
               int2hex
               hex2int
-              
+
               bcd2int
               int2bcd
               bcd2str
-              
+
               format_ascii_table
             );
 
 our %EXPORT_TAGS = (
-                   
+
                    'all'  => \@EXPORT,
                    'none' => [],
-                   
+
                    );
-            
+
 ##############################################################################
 
 my $TEXT_IO_ENCODING;
@@ -202,7 +202,7 @@ sub file_load
 {
   my $fn  = shift; # file name
   my $opt = shift || {};
-  
+
   if( ref( $fn ) eq 'HASH' )
     {
     $opt = $fn;
@@ -210,10 +210,10 @@ sub file_load
     $fn = $opt->{ 'FNAME' } || $opt->{ 'FILE_NAME' };
     }
   else
-    {  
+    {
     hash_uc_ipl( $opt );
     }
-  
+
   my $i;
   my $encoding = $opt->{ 'ENCODING' };
   my $mopt;
@@ -238,10 +238,10 @@ sub file_load_ar
     $fn = $opt->{ 'FNAME' } || $opt->{ 'FILE_NAME' };
     }
   else
-    {  
+    {
     hash_uc_ipl( $opt );
     }
-  
+
   my $i;
   my $encoding = $opt->{ 'ENCODING' };
   my $mopt;
@@ -256,7 +256,7 @@ sub file_load_ar
 sub file_save
 {
   my $fn = shift; # file name
-  
+
   my $opt = {};
   if( ref( $fn ) eq 'HASH' )
     {
@@ -296,7 +296,7 @@ sub file_bin_load
 sub file_bin_save
 {
   my $fn = shift; # file name
-  
+
   my $o;
   open( $o, ">", $fn ) or return 0;
   binmode( $o );
@@ -344,7 +344,7 @@ sub file_text_load_first_line
 sub file_text_save
 {
   my $fn = shift; # file name
-  
+
   my $o;
   my $enc = ":encoding($TEXT_IO_ENCODING)" if $TEXT_IO_ENCODING;
   open( $o, ">$enc", $fn ) or return 0;
@@ -357,7 +357,7 @@ sub file_text_save
 sub file_text_append
 {
   my $fn = shift; # file name
-  
+
   my $o;
   my $enc = ":encoding($TEXT_IO_ENCODING)" if $TEXT_IO_ENCODING;
   open( $o, ">>$enc", $fn ) or return 0;
@@ -385,7 +385,7 @@ sub cmd_read_from
 sub cmd_write_to
 {
   my @args = ref( $_[0] ) ? @{ $_[0] } : @_;
-  
+
   open( my $o, "|-", @args ) or return undef;
   print $o @_;
   close $o;
@@ -447,14 +447,14 @@ sub file_lock
   my $fnh = shift; # file name or file handle
   my $nb  = shift; # non-blocking
   my $ex  = shift; # true if exclusive lock
-  
+
   my $fh;
   if( ref $fnh )
     {
     # file handle
     $fh = $fnh;
     }
-  else  
+  else
     {
     # filename
     open( $fh, ( -e $fnh ? ( $ex ? '+<' : '<' ) : ( $ex ? '+>' : '>' ) ), $fnh ) or return undef;
@@ -493,7 +493,7 @@ sub dir_path_make
   my %opt = @_;
 
   my $mask = $opt{ 'MASK' } || oct('700');
-  
+
   my $abs;
 
   $path =~ s/\/+$/\//o;
@@ -514,7 +514,6 @@ sub dir_path_make
 sub dir_path_ensure
 {
   my $dir = shift;
-  my %opt = @_;
 
   dir_path_make( $dir, @_ ) unless -d $dir;
   return undef unless -d $dir;
@@ -568,17 +567,17 @@ sub __url_escapes_init
 
 sub str_url_escape
 {
-  my $text = shift;
-  
-#  $text =~ s/([^ -\$\&-<>-~])/$URL_ESCAPES{$1}/gs;
-  $text =~ s/([^A-Za-z_0-9])/$URL_ESCAPES{$1}/gs; # strict
-  return $text;
+  my $bytes = encode( 'UTF-8', shift ); # assume UTF-8 input
+
+  $bytes =~ s/([^A-Za-z_0-9])/$URL_ESCAPES{$1}/gs; # strict
+
+  return $bytes;
 }
 
 sub str_url_unescape
 {
   my $text = shift;
-  
+
   $text =~ s/%([0-9A-Fa-f]{2})/chr(hex($1))/ge;
   return $text;
 }
@@ -613,7 +612,7 @@ sub str_html_escape
   my $text = shift;
 
   $text =~ s/([<>`'&"\\])/$HTML_ESCAPES{ $1 }/ge;
-  
+
   return $text;
 }
 
@@ -622,7 +621,7 @@ sub str_html_escape_text
   my $text = shift;
 
   $text =~ s/([<>`'&"\\])/$HTML_ESCAPES_TEXT{ $1 }/ge;
-  
+
   return $text;
 }
 
@@ -631,7 +630,7 @@ sub str_html_escape_attr
   my $text = shift;
 
   $text =~ s/([<>`'&"\\])/$HTML_ESCAPES_ATTR{ $1 }/ge;
-  
+
   return $text;
 }
 
@@ -640,7 +639,7 @@ sub str_html_unescape
   my $text = shift;
 
   confess "still not implemented";
-  
+
   return $text;
 }
 
@@ -689,7 +688,7 @@ sub str_pad_center
 
   my $padlen = int((abs($len) - length($str))/2);
   my $padding = $pad x $padlen if $padlen > 0;
-  
+
   $str = substr( $padding . $str . $padding . $pad, 0, abs($len) );
 
   return $str;
@@ -715,7 +714,7 @@ sub str_kmg_to_num
 sub str_hms_to_secs
 {
   my $s = uc shift;
-  
+
   my $secs;
   $s .= 's' if $s =~ /^[\s\d]+$/;
   while( $s =~ /(\d+)\s*([WDHMS])/gi )
@@ -726,7 +725,7 @@ sub str_hms_to_secs
     elsif( lc $2 eq 'd' ) { $secs += $1 * 60 * 60 * 24; }
     elsif( lc $2 eq 'w' ) { $secs += $1 * 60 * 60 * 24 * 7; }
     }
-  
+
   return $secs;
 }
 
@@ -741,9 +740,9 @@ sub str_password_strength
   my $p  = shift;
 
   $p =~ s/(.)\1+/$1/g; # reduce repeating chars
-  
-  my $l  = length( $p ); # remaining string length 
-  
+
+  my $l  = length( $p ); # remaining string length
+
   my $lc = $p =~ tr/[a-z]/[a-z]/; # lower case letters
   my $uc = $p =~ tr/[A-Z]/[A-Z]/; # upper case letters
   my $dc = $p =~ tr/[0-9]/[0-9]/; # digits
@@ -756,7 +755,7 @@ sub str_password_strength
   my $res = log( $as ** $l ) / $cp;
 
   # print "<$p> l=$l   lc=$lc   uc=$uc   dc=$dc   sc=$sc   cc=$cc   as=$as   nb=$nb   ($res)\n";
-  
+
   return $res;
 }
 
@@ -767,7 +766,7 @@ sub str_password_strength
 sub str_capitalize
 {
   return uc( substr( $_[0], 0, 1 ) ) . lc( substr( $_[0], 1 ) );
-}  
+}
 
 # returns concatenated first letters of all words in the string
 # "James Webb Telescope" will return JWT
@@ -829,7 +828,7 @@ sub hash2str_keys
 sub str2hash_url
 {
   my $str = shift;
-  
+
   my %h;
   for( split( /\n/, $str ) )
     {
@@ -880,7 +879,7 @@ sub __hash_ulc
     $nr->{ $k } = $v;
     delete $nr->{ $old_k } if ($ipl and $k ne $old_k);
     }
-  return $nr;  
+  return $nr;
 }
 
 sub hash_uc
@@ -917,7 +916,7 @@ sub hash_save
 sub hash_load
 {
   my $fn = shift;
-  
+
   return str2hash( file_load( $fn ) );
 }
 
@@ -943,7 +942,7 @@ sub hash_save_url
 sub hash_load_url
 {
   my $fn = shift;
-  
+
   return str2hash_url( file_load( $fn ) );
 }
 
@@ -953,9 +952,9 @@ sub hash_validate
 {
   my $hr = shift; # hashref to validate
   my $vr = shift; # hashref with expectations
-  
+
   my @err; # invalid keys
-  
+
   while( my ( $k, $v ) = each %$hr )
     {
     if( ! exists $vr->{ $k } )
@@ -963,9 +962,9 @@ sub hash_validate
       push @err, $k;
       next;
       }
-    
+
     my $vv = $vr->{ $k };
-    
+
     if( ref( $v ) eq 'HASH' )
       {
       my @e = hash_validate( $v, $vv );
@@ -981,7 +980,7 @@ sub hash_validate
       my $t = $4;
 
       $v =~ s/[\s'`]+//g;
-      
+
       my $re;
       $re = qr/^[-+]?\d+$/ if $y eq 'INT';
       $re = qr/^[-+]?\d+(\.\d*)?$/ if $y eq 'REAL' or $y eq 'FLOAT';
@@ -996,7 +995,7 @@ sub hash_validate
       else
         {
         push @err, $k;
-        }  
+        }
       }
     elsif( $vv =~ /^\s*RE(I)?:\s*(.*?)\s*$/i )
       {
@@ -1004,17 +1003,17 @@ sub hash_validate
       my $re = $ic ? qr/$2/i : qr/$2/;
       # print Data::Dumper::Dumper( '=re=rei='x5, $k, $v, $vv, $re, $ic );
       push @err, $k unless $v =~ /$re/;
-      }  
+      }
     elsif( $vv =~ /^\s*(-d|dir|directory)\s*$/i )
       {
       push @err, $k unless -d $v;
-      }  
+      }
     elsif( $vv =~ /^\s*(-f|file)\s*$/i )
       {
       push @err, $k unless -f $v;
-      }  
+      }
     }
-    
+
   return wantarray() ? sort( @err ) : @err > 0 ? 0 : 1;
 }
 
@@ -1024,21 +1023,21 @@ sub hash_validate
 sub hash_lock_recursive
 {
   my $hr = shift;
-  
+
   lock_hashref( $hr );
   for my $vr ( values %$hr )
     {
     next unless ref( $vr ) eq 'HASH';
     hash_lock_recursive( $vr );
     }
-  
-  return $hr;  
+
+  return $hr;
 }
 
 sub hash_unlock_recursive
 {
   my $hr = shift;
-  
+
   unlock_hashref( $hr );
   for my $vr ( values %$hr )
     {
@@ -1046,13 +1045,13 @@ sub hash_unlock_recursive
     hash_unlock_recursive( $vr );
     }
 
-  return $hr;  
+  return $hr;
 }
 
 sub hash_keys_lock_recursive
 {
   my $hr = shift;
-  
+
   lock_ref_keys( $hr );
   for my $vr ( values %$hr )
     {
@@ -1060,14 +1059,14 @@ sub hash_keys_lock_recursive
     hash_keys_lock_recursive( $vr );
     }
 
-  return $hr;  
+  return $hr;
 }
 
 sub hr_traverse_vals
 {
   my $hr  = shift;
   my $sub = shift;
-  
+
   for( keys %$hr )
     {
     my $v = $hr->{ $_ };
@@ -1087,7 +1086,7 @@ sub hr_traverse_vals
     else
       {
       confess "unsupported VALUE TYPE";
-      }  
+      }
     }
 }
 
@@ -1095,7 +1094,7 @@ sub ar_traverse_vals
 {
   my $ar = shift;
   my $sub = shift;
-  
+
   for( @$ar )
     {
     my $r = ref( $_ );
@@ -1114,13 +1113,13 @@ sub ar_traverse_vals
     else
       {
       confess "unsupported VALUE TYPE";
-      }  
+      }
     }
 }
 
 ##############################################################################
 
-sub list_uniq 
+sub list_uniq
 {
   my %z;
   return grep ! $z{ $_ }++, @_;
@@ -1171,7 +1170,7 @@ sub __digest_hex_file
 {
   my $digest = shift;
   my $fn     = shift;
-  
+
   open( my $fh, '<', $fn ) or return undef;
   binmode $fh;
   $digest->addfile( $fh );
@@ -1201,6 +1200,7 @@ sub create_random_id
   my $let = shift() || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
   my $l = length( $let );
+
   my $id;
   $id .= substr( $let, int(rand() * $l), 1 ) for ( 1 .. $len );
   return $id;
@@ -1228,11 +1228,11 @@ sub __glob_tree_tree_walk
   push @$r, grep { -e } sort ( File::Glob::bsd_glob( "$p$f" ) );
 
   my @dirs = grep { -d "$p$_" } read_dir_entries( "$p/." );
-  
+
   #print STDERR "DEBUG: __glob_tree_tree_walk: $p -- $f [$p*] dirs: (@dirs)\n\n";
 
   __glob_tree_tree_walk( "$p$_/", $f, $r ) for @dirs;
-  
+
   return 1;
 }
 
@@ -1252,24 +1252,24 @@ sub glob_tree
 sub read_dir_entries
 {
   my $p = shift; # path
-  
+
   opendir( my $dir, $p ) or return undef;
   my @e = sort grep { !/^\.\.?$/ } readdir $dir;
   closedir( $dir );
-  
+
   return @e;
 }
 
 ##############################################################################
 
-use constant 
+use constant
 {
     FFT_FILES  => 0x01,
     FFT_DIRS   => 0x02,
-    
+
     FFT_SYMF   => 0x04, # allow symlink files in result (requires FFT_FILES)
     FFT_SYMD   => 0x08, # allow symlink dirs in result  (requires FFT_DIRS )
-    
+
     FFT_FOLLOW => 0x10,
     FFT_DEBUG  => 0x80,
 
@@ -1287,14 +1287,14 @@ sub __fftwalk
   my $ty = shift; # typemap, see FFTs above
 
   print "debug: __fftwalk [$e]\n" if $ty & FFT_DEBUG;
-  
+
   opendir( my $dir, $e ) or return undef;
   my $ee;
   while( $ee = readdir $dir )
     {
     next if $ee eq '.' or $ee eq '..';
     my $eee = "$e/$ee";
-    
+
     my $is_dir  = -d $eee;
     my $is_link = -l $eee;
 
@@ -1306,7 +1306,7 @@ sub __fftwalk
     else
       {
       push @$a, $eee if $is_link ? $ty & FFT_FILES && $ty & FFT_SYMF : $ty & FFT_FILES;
-      }  
+      }
     }
   closedir( $dir );
 }
@@ -1318,7 +1318,7 @@ sub __fftwalk
 # examples:
 #   my $res_arrref = fftwalk( FFT_FILES | FFT_SYMF, 'go', 'now/' );
 #   fftwalk( { TYPE => FFT_FULL, ARRAY => \@res_arr }, 'go', 'now/' );
-# 
+#
 # options hash can have:
 #   TYPE  => typemap
 # this option tells which types of filesystem entries to be processed:
@@ -1349,8 +1349,8 @@ sub fftwalk
   else
     {
     $opt = {};
-    }  
-  
+    }
+
   die "fftwalk() uses TYPE instead of MODE" if $opt->{ 'MODE' };
 
   my $a = $opt->{ 'ARRAY' } ? $opt->{ 'ARRAY' } : [];
@@ -1369,17 +1369,17 @@ sub ref_freeze
 
   die "error: ref_freeze(): requires data reference!\n" unless ref( $ref );
 
-  my $fzd = encode_base64( Storable::nfreeze( $ref ) );                                                     
-};                                                                                                                              
-                                                                                                                                
+  my $fzd = encode_base64( Storable::nfreeze( $ref ) );
+};
+
 sub ref_thaw
 {
   my $fzd = shift;
 
-  my ( $ref ) = Storable::thaw( decode_base64( $fzd ) );                                                      
-                                                                                                                                
-  return ref( $ref ) ? $ref : undef;                                                                                            
-};                                                                                                                              
+  my ( $ref ) = Storable::thaw( decode_base64( $fzd ), 0 ); # disable bless and tie, was always used for data only
+
+  return ref( $ref ) ? $ref : undef;
+};
 
 ##############################################################################
 
@@ -1395,7 +1395,7 @@ sub int2hex
 sub bcd2int
 {
   my $bcd = shift;
-  
+
   my $int = 0;
 
   my @bcd = unpack 'C*', $bcd;
@@ -1413,14 +1413,14 @@ sub int2bcd
 {
   my $int = shift;
   my $len = shift; # in how many bytes to produce bcd
-  
+
   die "int2bcd() is not yet implemented";
 }
 
 sub bcd2str
 {
   my $bcd = shift;
-  
+
   my $str;
 
   my @bcd = unpack 'C*', $bcd;
@@ -1444,11 +1444,11 @@ sub format_ascii_table
   my $data = shift;
 
   $data = format_ascii_convert_aoh_to_aoa( $data ) if ref( $data->[ 0 ] ) eq 'HASH';
-  
+
   my @ws; # widths
   my $wt; # width total
   my $cs; # columns
-  
+
   for my $row ( @$data )
     {
     my $c = 0;
@@ -1460,13 +1460,13 @@ sub format_ascii_table
       }
     $cs = $c if $c > $cs;
     }
-  
+
   $wt += $_ + 2 for @ws; # plus 2 for one char spacing around borders
   $wt += @ws + 1; # plus border chars
 
   my $sep = '+' . ( '-' x ( $wt - 2 ) ) . '+' . "\n";
   my $tx;
-  
+
   my $r = 0;
   $tx .= $sep;
   for my $row ( @$data )
@@ -1483,7 +1483,7 @@ sub format_ascii_table
     $r++;
     }
   $tx .= $sep;
-  
+
   return $tx;
 }
 
@@ -1491,20 +1491,20 @@ sub format_ascii_convert_aoh_to_aoa
 {
   my $data = shift;
   my @out;
-  
+
   my %keys;
   for my $row ( @$data )
     {
     $keys{ $_ }++ for keys %$row;
     }
   my @keys = sort keys %keys;
-  
+
   push @out, \@keys;
   for my $row ( @$data )
     {
     push @out, [ map { $row->{ $_ } } @keys ];
     }
-  
+
   return \@out;
 }
 
@@ -1525,7 +1525,7 @@ INIT  { __url_escapes_init(); }
 =head1 SYNOPSIS
 
   use Data::Tools qw( :all );  # import all functions
-  use Data::Tools;             # the same as :all :) 
+  use Data::Tools;             # the same as :all :)
   use Data::Tools qw( :none ); # do not import anything, use full package names
 
   # --------------------------------------------------------------------------
@@ -1537,7 +1537,7 @@ INIT  { __url_escapes_init(); }
   my $data = file_load( $file_name );
 
   my $data_arrayref = file_load_ar( $file_name );
-  
+
   # for specific charset encoding and because of backward compatibility:
 
   my $res  = file_save( { FILE_NAME => $file_name, ENCODING => 'UTF-8' }, 'data' );
@@ -1553,7 +1553,7 @@ INIT  { __url_escapes_init(); }
   my $file_size                         = file_size(  $file_name );
 
   # --------------------------------------------------------------------------
-  
+
   my $res  = dir_path_make( '/path/to/somewhere' ); # create full path with 0700
   my $res  = dir_path_make( '/new/path', MASK => 0755 ); # ...with mask 0755
   my $path = dir_path_ensure( '/path/s/t/h' ); # ensure path exists, check+make
@@ -1562,7 +1562,7 @@ INIT  { __url_escapes_init(); }
 
   my $path_with_trailing_slash = file_path( $full_path_or_file_name );
 
-  # file_name() and file_name_ext() return full name with leadeing 
+  # file_name() and file_name_ext() return full name with leadeing
   # dot for dot-files ( .filename )
   my $file_name_including_ext  = file_name_ext( $full_path_or_file_name );
   my $file_name_only_no_ext    = file_name( $full_path_or_file_name );
@@ -1571,7 +1571,7 @@ INIT  { __url_escapes_init(); }
   my $file_ext_only            = file_ext( $full_path_or_file_name );
 
   # --------------------------------------------------------------------------
-  
+
   # uses simple backslash escaping of \n, = and \ itself
   my $data_str = hash2str( $hash_ref ); # convert hash to string "key=value\n"
   my $hash_ref = str2hash( $hash_str ); # convert str "key-value\n" to hash
@@ -1583,7 +1583,7 @@ INIT  { __url_escapes_init(); }
   # same as hash2str() and str2hash() but uses URL-style escaping
   my $data_str = hash2str_url( $hash_ref ); # convert hash to string "key=value\n"
   my $hash_ref = str2hash_url( $hash_str ); # convert str "key-value\n" to hash
-  
+
   my $hash_ref = url2hash( 'key1=val1&key2=val2&testing=tralala);
   # $hash_ref will be { key1 => 'val1', key2 => 'val2', testing => 'tralala' }
 
@@ -1592,20 +1592,20 @@ INIT  { __url_escapes_init(); }
 
   hash_uc_ipl( $hash_ref_to_be_converted_to_upper_case_keys );
   hash_lc_ipl( $hash_ref_to_be_converted_to_lower_case_keys );
-  
+
   # save/load hash in str_url_escaped form to/from a file
   my $res      = hash_save( $file_name, $hash_ref );
   my $hash_ref = hash_load( $file_name );
 
   # save hash with certain keys order, uses hash2str_keys()
   my $res      = hash_save( $file_name, \%hash, sort keys %hash );
-  
+
   # same as hash_save() and hash_load() but uses hash2str_url() and str2hash_url()
   my $res      = hash_save_url( $file_name, $hash_ref );
   my $hash_ref = hash_load_url( $file_name );
 
   # validate (nested) hash by example
-  
+
   # validation example nested hash
   my $validate_hr = {
                     A => 'INT',
@@ -1617,8 +1617,8 @@ INIT  { __url_escapes_init(); }
                          },
                     DIR1  => '-d',   # must be existing directory
                     DIR2  => 'dir',  # must be existing directory
-                    FILE1 => '-f',   # must be existing file  
-                    FILE2 => 'file', # must be existing file  
+                    FILE1 => '-f',   # must be existing file
+                    FILE2 => 'file', # must be existing file
                     };
   # actual nested hash to be verified if looks like the example
   my $data_hr     = {
@@ -1629,24 +1629,24 @@ INIT  { __url_escapes_init(); }
                          E => '123abc',
                          F => '456FFF',
                          },
-                    }               
-  
+                    }
+
   my @invalid_keys = hash_validate( $data_hr, $validate_hr );
   print "YES!" if hash_validate( $data_hr, $validate_hr );
 
   # --------------------------------------------------------------------------
-  
+
   my $escaped   = str_url_escape( $plain_str ); # URL-style %XX escaping
   my $plain_str = str_url_unescape( $escaped );
 
   my $escaped   = str_html_escape( $plain_str ); # HTML-style &name; escaping
   my $plain_str = str_html_unescape( $escaped );
-  
+
   my $hex_str   = str_hex( $plain_str ); # HEX-style XX string escaping
   my $plain_str = str_unhex( $hex_str );
 
   # --------------------------------------------------------------------------
-  
+
   # converts perl package names to file names, f.e: returns "Data/Tools.pm"
   my $perl_pkg_fn = perl_package_to_file( 'Data::Tools' );
 
@@ -1667,7 +1667,7 @@ INIT  { __url_escapes_init(); }
                       # returns 'day'  for $dc == 1
                       # returns 'days' for $dc >  1
 
-  my $num = str_kmg_to_num(   '1K' ); # returns 1024   
+  my $num = str_kmg_to_num(   '1K' ); # returns 1024
   my $num = str_kmg_to_num( '2.5M' ); # returns 2621440
   my $num = str_kmg_to_num(   '1T' ); # returns 1099511627776
 
@@ -1696,7 +1696,7 @@ keys (possibly key paths like 'KEY1/KEY2/KEY3'):
 
   # array context
   my @invalid_keys = hash_validate( $data_hr, $validate_hr );
-  
+
   # scalar context
   print "YES!" if hash_validate( $data_hr, $validate_hr );
 
@@ -1713,7 +1713,7 @@ Data::Tools package includes several sub-modules:
 
 =head1 REQUIRED MODULES
 
-Data::Tools is designed to be simple, compact and self sufficient. 
+Data::Tools is designed to be simple, compact and self sufficient.
 However it uses some 3rd party modules:
 
   * Digest::Whirlpool
@@ -1722,20 +1722,20 @@ However it uses some 3rd party modules:
 
 =head1 SEE ALSO
 
-For more complex cases of nested hash validation, 
+For more complex cases of nested hash validation,
 check Data::Validate::Struct module by Thomas Linden, cheers :)
 
 =head1 GITHUB REPOSITORY
 
   git@github.com:cade-vs/perl-data-tools.git
-  
+
   git clone git://github.com/cade-vs/perl-data-tools.git
-  
+
 =head1 AUTHOR
 
   Vladi Belperchinov-Shabanski "Cade"
         <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
-  http://cade.noxrun.com/  
+  http://cade.noxrun.com/
 
 
 =cut

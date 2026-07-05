@@ -9,7 +9,11 @@ TEST,IS,HERE,   NOPE   ,"" THERE "
 123,is,testing,  """The"" book, is now"  ,qwerty
 "1997","Ford","E350"
 1997,Ford,E350,"Super, ""luxurious"" truck"
+xxxx,Fo"rd,E"350","Super, ""luxurious"" truck"
 END
+
+#print Dumper( parse_csv_line( q[ xxxx,Fo"rd,E"350","Super, ""luxurious"" truck" ] ) );
+#exit;
 
 print Dumper( parse_csv( $csv ) );
 print Dumper( parse_csv_to_hash_array( $csv ) );

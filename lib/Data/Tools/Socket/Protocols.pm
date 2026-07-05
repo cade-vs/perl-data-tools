@@ -1,13 +1,13 @@
 ##############################################################################
 #
 #  Data::Tools::Socket::Protocols perl module
-#  Copyright (c) 2013-2024 Vladi Belperchinov-Shabanski "Cade" 
+#  Copyright (c) 2013-2024 Vladi Belperchinov-Shabanski "Cade"
 #        <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
-#  http://cade.noxrun.com/  
+#  http://cade.noxrun.com/
 #
 #  GPL
 #
-#  Data::Tools::Socket::Protocols is ported from Decor's 
+#  Data::Tools::Socket::Protocols is ported from Decor's
 #  Decor::Shared::Net::Protocols: https://github.com/cade-vs/perl-decor
 #
 ##############################################################################
@@ -31,37 +31,37 @@ our @EXPORT = qw(
 my %PROTOCOL_TYPES = (
                   'p' => {
                          'require' => 'Storable',
-                         'pack'    => \&protocol_type_storable_pack, 
+                         'pack'    => \&protocol_type_storable_pack,
                          'unpack'  => \&protocol_type_storable_unpack,
                          },
                   'e' => {
                          'require' => 'Sereal',
-                         'pack'    => \&protocol_type_sereal_pack, 
+                         'pack'    => \&protocol_type_sereal_pack,
                          'unpack'  => \&protocol_type_sereal_unpack,
                          },
                   's' => {
                          'require' => 'Data::Stacker',
-                         'pack'    => \&protocol_type_stacker_pack, 
+                         'pack'    => \&protocol_type_stacker_pack,
                          'unpack'  => \&protocol_type_stacker_unpack,
                          },
                   'j' => {
                          'require' => 'JSON',
-                         'pack'    => \&protocol_type_json_pack, 
+                         'pack'    => \&protocol_type_json_pack,
                          'unpack'  => \&protocol_type_json_unpack,
                          },
                   'x' => {
                          'require' => 'XML::Simple',
-                         'pack'    => \&protocol_type_xml_pack, 
+                         'pack'    => \&protocol_type_xml_pack,
                          'unpack'  => \&protocol_type_xml_unpack,
                          },
                   'h' => {
                          'require' => undef,
-                         'pack'    => \&protocol_type_hash_pack, 
+                         'pack'    => \&protocol_type_hash_pack,
                          'unpack'  => \&protocol_type_hash_unpack,
                          },
                   'H' => {
                          'require' => undef,
-                         'pack'    => \&protocol_type_hash_url_pack, 
+                         'pack'    => \&protocol_type_hash_url_pack,
                          'unpack'  => \&protocol_type_hash_url_unpack,
                          },
                   );
@@ -73,7 +73,7 @@ sub socket_protocol_read_message
   my $socket  = shift;
   my $timeout = shift;
   my $opt     = shift || {};
-  
+
   my ( $data, $data_read_len, $error ) = socket_read_message( $socket, $timeout );
 
   if( $error )
@@ -81,11 +81,11 @@ sub socket_protocol_read_message
     # incoming length is unknown or socket error
     return wantarray ? ( undef, undef, $error ) : undef;
     }
-  
+
   return wantarray ? ( undef, undef, 'E_EMPTY' ) : undef if $data_read_len == 0;
 
   my $ptype = substr( $data, 0, 1 );
-  
+
   return wantarray ? ( undef, $ptype, 'E_EMPTY' ) : undef if $data_read_len == 1;
 
   confess "unknown or forbidden PROTOCOL_TYPE requested [$ptype] expected one of [" . join( ',', keys %PROTOCOL_ALLOW ) . "]" unless exists $PROTOCOL_ALLOW{ $ptype };
@@ -103,14 +103,14 @@ sub socket_protocol_write_message
   my $ptype   = shift;
   my $hr      = shift;
   my $timeout = shift;
-  
+
   confess "unknown or forbidden PROTOCOL_TYPE requested [$ptype] expected one of [" . join( ',', keys %PROTOCOL_ALLOW ) . "]" unless exists $PROTOCOL_ALLOW{ $ptype };
   my $proto = $PROTOCOL_TYPES{ $ptype };
-  
+
   confess "expected HASH reference at arg #3" unless ref( $hr ) eq 'HASH';
 
   my $data = $ptype . $proto->{ 'pack' }->( $hr );
-  
+
   return socket_write_message( $socket, $data, $timeout );
 }
 
@@ -138,13 +138,13 @@ sub load_protocol
   my $ptype = shift;
   return if exists $PROTOCOL_LOADED{ $ptype };
   confess "unknown or forbidden PROTOCOL_TYPE requested [$ptype] expected one of [" . join( ',', keys %PROTOCOL_ALLOW ) . "]" unless exists $PROTOCOL_ALLOW{ $ptype };
-  
+
   my $req = $PROTOCOL_TYPES{ $ptype }{ 'require' };
   if( $req )
     {
     eval { my $fn = perl_package_to_file( $req ); require $fn; };
     confess "cannot load PROTOCOL_TYPE [$ptype] error: $@" if $@;
-    }  
+    }
   $PROTOCOL_LOADED{ $ptype }++;
   return 1;
 }
@@ -160,7 +160,7 @@ sub protocol_type_storable_pack
 sub protocol_type_storable_unpack
 {
   load_protocol( 'p' );
-  return Storable::thaw( shift );
+  return Storable::thaw( shift(), 0 ); # do not allow bless and tie
 }
 
 sub protocol_type_sereal_pack
@@ -201,7 +201,7 @@ sub protocol_type_json_unpack
 
 sub protocol_type_xml_pack
 {
-  load_protocol( 'x' );   
+  load_protocol( 'x' );
   return XML::Simple::XMLout( shift );
 }
 
