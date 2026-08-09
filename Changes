@@ -1,6 +1,10 @@
 
 Revision history for Perl extension Data::Tools
 
+1.52 2026-09-xx
+
+   - added optional formatting row with align and widths to format_ascii_table()
+
 1.51 2026-06-15
 
    - Data::Tools::CSV fix: execute "" -> " translation only for quoted data

@@ -582,36 +582,46 @@ sub str_url_unescape
   return $text;
 }
 
+
+#  &       &amp;           &#38;        &#x26;
+#  <       &lt;            &#60;        &#x3C;
+#  >       &gt;            &#62;        &#x3E;
+#  '       &apos;          &#39;        &#x27;
+#  "       &quot;          &#34;        &#x22;
+
 my %HTML_ESCAPES = (
-                   '"'  => '&#34;',
                    "&"  => '&#38;',
-                   "'"  => '&#39;',
                    '<'  => '&#60;',
-                   '='  => '&#61;',
                    '>'  => '&#62;',
+                   "'"  => '&#39;',
+                   '"'  => '&#34;',
+                   '='  => '&#61;',
                    "`"  => '&#96;',
-                   '\\' => '&#134;',
+                   '\\' => '&#92;',
                    );
 
 my %HTML_ESCAPES_TEXT = (
+                   "&"  => '&#38;',
                    '<'  => '&#60;',
                    '>'  => '&#62;',
                    );
 
 my %HTML_ESCAPES_ATTR = (
-                   '"'  => '&#34;',
-                   "'"  => '&#39;',
+                   "&"  => '&#38;',
                    '<'  => '&#60;',
-                   '='  => '&#61;',
                    '>'  => '&#62;',
-                   "`"  => '&#96;',
+                   "'"  => '&#39;',
+                   '"'  => '&#34;',
                    );
+my $HTML_ESCAPES_CHARS      = join '', keys %HTML_ESCAPES;
+my $HTML_ESCAPES_TEXT_CHARS = join '', keys %HTML_ESCAPES_TEXT;
+my $HTML_ESCAPES_ATTR_CHARS = join '', keys %HTML_ESCAPES_ATTR;
 
 sub str_html_escape
 {
   my $text = shift;
 
-  $text =~ s/([<>`'&"\\])/$HTML_ESCAPES{ $1 }/ge;
+  $text =~ s/([\Q$HTML_ESCAPES_CHARS\E])/$HTML_ESCAPES{ $1 }/go;
 
   return $text;
 }
@@ -620,7 +630,7 @@ sub str_html_escape_text
 {
   my $text = shift;
 
-  $text =~ s/([<>`'&"\\])/$HTML_ESCAPES_TEXT{ $1 }/ge;
+  $text =~ s/([\Q$HTML_ESCAPES_TEXT_CHARS\E])/$HTML_ESCAPES_TEXT{ $1 }/go;
 
   return $text;
 }
@@ -629,19 +639,77 @@ sub str_html_escape_attr
 {
   my $text = shift;
 
-  $text =~ s/([<>`'&"\\])/$HTML_ESCAPES_ATTR{ $1 }/ge;
+  $text =~ s/([\Q$HTML_ESCAPES_ATTR_CHARS\E])/$HTML_ESCAPES_ATTR{ $1 }/go;
 
   return $text;
 }
 
+
+# named character references recognised by str_html_unescape().
+# per WHATWG HTML Living Standard § 13.5 "Named character references"
+#   https://html.spec.whatwg.org/multipage/named-characters.html
+# matching is case-sensitive and exact-string: the table is a flat list
+# of reference names (including their exact casing), mapped to code points.
+# it is intentional that many code points have multiple names (e.g. both
+# amp and AMP point to U+0026, but they are separate table entries).
+# a trailing ';' is always required. this set is the legacy no-semicolon-
+# required WHATWG subset (where the semicolon is optional per HTML 2.0 for
+# certain names, but we enforce it here for simplicity)
+#   https://github.com/whatwg/html-build/blob/main/entities/json-entities-legacy.inc
+# plus 'apos', which is semicolon-required and outside that table, but
+# universally expected.
+my %HTML_NAMED_ENTITIES = (
+  AElig   => chr(198),  AMP     => chr(38),   Aacute  => chr(193),  Acirc   => chr(194),
+  Agrave  => chr(192),  Aring   => chr(197),  Atilde  => chr(195),  Auml    => chr(196),
+  COPY    => chr(169),  Ccedil  => chr(199),  ETH     => chr(208),  Eacute  => chr(201),
+  Ecirc   => chr(202),  Egrave  => chr(200),  Euml    => chr(203),  GT      => chr(62),
+  Iacute  => chr(205),  Icirc   => chr(206),  Igrave  => chr(204),  Iuml    => chr(207),
+  LT      => chr(60),   Ntilde  => chr(209),  Oacute  => chr(211),  Ocirc   => chr(212),
+  Ograve  => chr(210),  Oslash  => chr(216),  Otilde  => chr(213),  Ouml    => chr(214),
+  QUOT    => chr(34),   REG     => chr(174),  THORN   => chr(222),  Uacute  => chr(218),
+  Ucirc   => chr(219),  Ugrave  => chr(217),  Uuml    => chr(220),  Yacute  => chr(221),
+  aacute  => chr(225),  acirc   => chr(226),  acute   => chr(180),  aelig   => chr(230),
+  agrave  => chr(224),  amp     => chr(38),   apos    => chr(39),   aring   => chr(229),
+  atilde  => chr(227),  auml    => chr(228),  brvbar  => chr(166),  ccedil  => chr(231),
+  cedil   => chr(184),  cent    => chr(162),  copy    => chr(169),  curren  => chr(164),
+  deg     => chr(176),  divide  => chr(247),  eacute  => chr(233),  ecirc   => chr(234),
+  egrave  => chr(232),  eth     => chr(240),  euml    => chr(235),  frac12  => chr(189),
+  frac14  => chr(188),  frac34  => chr(190),  gt      => chr(62),   iacute  => chr(237),
+  icirc   => chr(238),  iexcl   => chr(161),  igrave  => chr(236),  iquest  => chr(191),
+  iuml    => chr(239),  laquo   => chr(171),  lt      => chr(60),   macr    => chr(175),
+  micro   => chr(181),  middot  => chr(183),  nbsp    => chr(160),  not     => chr(172),
+  ntilde  => chr(241),  oacute  => chr(243),  ocirc   => chr(244),  ograve  => chr(242),
+  ordf    => chr(170),  ordm    => chr(186),  oslash  => chr(248),  otilde  => chr(245),
+  ouml    => chr(246),  para    => chr(182),  plusmn  => chr(177),  pound   => chr(163),
+  quot    => chr(34),   raquo   => chr(187),  reg     => chr(174),  sect    => chr(167),
+  shy     => chr(173),  sup1    => chr(185),  sup2    => chr(178),  sup3    => chr(179),
+  szlig   => chr(223),  thorn   => chr(254),  times   => chr(215),  uacute  => chr(250),
+  ucirc   => chr(251),  ugrave  => chr(249),  uml     => chr(168),  uuml    => chr(252),
+  yacute  => chr(253),  yen     => chr(165),  yuml    => chr(255),
+  );
+
+sub _html_unescape_codepoint
+{
+  my $n = shift;
+  return undef if $n <= 0 || $n > 0x10FFFF || ( $n >= 0xD800 && $n <= 0xDFFF );
+  return chr( $n );
+}
+
+my $HTML_UNESCAPE_RE = qr//;
 sub str_html_unescape
 {
   my $text = shift;
-
-  confess "still not implemented";
-
+  $text =~ s{(&(?:\#[xX]([0-9A-Fa-f]+)|\#(\d+)|([A-Za-z][A-Za-z0-9]*));)}
+            {
+              defined $2 ? ( _html_unescape_codepoint( hex( $2 ) ) // $1 )
+            : defined $3 ? ( _html_unescape_codepoint( $3 )        // $1 )
+            : defined $4 ? ( $HTML_NAMED_ENTITIES{ $4 }            // $1 )
+            :               $1
+            }gexo;
   return $text;
 }
+
+##############################################################################
 
 sub str_hex
 {
@@ -1437,17 +1505,38 @@ sub bcd2str
 
 # sub format_ascii_table
 # takes either arrayref-of-arraysrefs or arrayref-oh-hashrefs
-# first row is heading
+# first row is heading, not special, just will have separator line after it
+# zero (before first) row is optional and holds formatting. by default it is
+# disabled, need format_ascii_table( \@data, FMT => 1 ); to be enabled
+# current format values are:
+# <   align left (empty value is considered left align)
+# >   align right
+# |   align center
+# any number present will be used as column width in chars
 
 sub format_ascii_table
 {
   my $data = shift;
+  my %opt  = @_;
 
   $data = format_ascii_convert_aoh_to_aoa( $data ) if ref( $data->[ 0 ] ) eq 'HASH';
 
-  my @ws; # widths
+  my @fma; # format align
+  my @fmw; # format width
+
   my $wt; # width total
   my $cs; # columns
+
+  if( $opt{ 'FMT' } )
+    {
+    for( @{ shift @$data } )
+      {
+      my ( $a, $w ) = ( '<', 0 );
+      ( $a, $w ) = ( $1, $2 ) if /^\s*([<>\|])\s*(\d+)?/;
+      push @fma, $a;
+      push @fmw, $w;
+      }
+    }
 
   for my $row ( @$data )
     {
@@ -1455,14 +1544,14 @@ sub format_ascii_table
     for my $d ( @$row )
       {
       my $l = length( $d );
-      $ws[ $c ] = $l if $l > $ws[ $c ];
+      $fmw[ $c ] = $l if $l > $fmw[ $c ]; # expand format widths if needed
       $c++;
       }
     $cs = $c if $c > $cs;
     }
 
-  $wt += $_ + 2 for @ws; # plus 2 for one char spacing around borders
-  $wt += @ws + 1; # plus border chars
+  $wt += $_ + 2 for @fmw; # plus 2 for one char spacing around borders
+  $wt += @fmw + 1; # plus border chars
 
   my $sep = '+' . ( '-' x ( $wt - 2 ) ) . '+' . "\n";
   my $tx;
@@ -1474,9 +1563,18 @@ sub format_ascii_table
     $tx .= '|';
     for my $c ( 0 .. $cs - 1 )
       {
-      my $w = $ws[ $c ];
-      $w = - $w if $row->[ $c ] =~ /^([\+\-])?[\d\.]+$/; # only plain number, no exp
-      $tx .= ' ' . str_pad( $row->[ $c ], $w ) . ' |';
+      my $v = $row->[ $c ];
+
+      my $a = $fma[ $c ];
+      my $w = $fmw[ $c ];
+      $a = '>' if ! $a and $v =~ /^([\+\-])?[\d\.]+$/;
+      $a = '<' if ! $a;
+
+      $v = str_pad( $v,   $w ) if $a eq '<';
+      $v = str_pad( $v, - $w ) if $a eq '>';
+      $v = str_pad_center( $v, $w ) if $a eq '|';
+
+      $tx .= ' ' . $v . ' |';
       }
     $tx .= "\n";
     $tx .= $sep if $r == 0;
