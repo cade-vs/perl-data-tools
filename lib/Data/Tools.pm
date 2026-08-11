@@ -13,6 +13,7 @@ use strict;
 use Exporter;
 use Carp;
 use Storable;
+use JSON;
 use Digest;
 use Digest::Whirlpool;
 use Digest::MD5;
@@ -84,6 +85,9 @@ our @EXPORT = qw(
               hash_save_keys
               hash_save_url
               hash_load_url
+              hash_save_json
+              hash_save_json_pp
+              hash_load_json
 
               hash_validate
 
@@ -1012,6 +1016,29 @@ sub hash_load_url
   my $fn = shift;
 
   return str2hash_url( file_load( $fn ) );
+}
+
+sub hash_save_json
+{
+  my $fn = shift;
+  my $hr = shift;
+
+  return file_save( $fn, encode_json( $hr ) );
+}
+
+sub hash_save_json_pp
+{
+  my $fn = shift;
+  my $hr = shift;
+
+  return file_save( $fn, JSON->new()->pretty( 1 )->encode( $hr ) );
+}
+
+sub hash_load_json
+{
+  my $fn = shift;
+
+  return decode_json( file_load( $fn ));
 }
 
 ##############################################################################

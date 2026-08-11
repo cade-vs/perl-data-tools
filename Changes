@@ -4,6 +4,11 @@ Revision history for Perl extension Data::Tools
 1.52 2026-09-xx
 
    - added optional formatting row with align and widths to format_ascii_table()
+   - since perl 5.40 JSON is now core module, so these are added:
+              hash_save_json
+              hash_save_json_pp
+              hash_load_json
+
 
 1.51 2026-06-15
 
