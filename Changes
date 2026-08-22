@@ -8,7 +8,7 @@ Revision history for Perl extension Data::Tools
               hash_save_json
               hash_save_json_pp
               hash_load_json
-
+   - added binary protocol messages format, which does not use packing at all
 
 1.51 2026-06-15
 

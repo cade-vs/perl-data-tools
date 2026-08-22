@@ -29,6 +29,9 @@ our @EXPORT = qw(
                 );
 
 my %PROTOCOL_TYPES = (
+                  'b' => {
+                         # binary. does not require anything, pack/unpack are essentially noops
+                         },
                   'p' => {
                          'require' => 'Storable',
                          'pack'    => \&protocol_type_storable_pack,
@@ -91,8 +94,17 @@ sub socket_protocol_read_message
   confess "unknown or forbidden PROTOCOL_TYPE requested [$ptype] expected one of [" . join( ',', keys %PROTOCOL_ALLOW ) . "]" unless exists $PROTOCOL_ALLOW{ $ptype };
   my $proto = $PROTOCOL_TYPES{ $ptype };
 
-  my $hr = $proto->{ 'unpack' }->( substr( $data, 1 ) );
-  confess "invalid data received from socket stream, expected HASH reference" unless ref( $hr ) eq 'HASH';
+  my $hr;
+  if( $ptype eq 'b' )
+    {
+    # no unpack for binary messages payload
+    $hr = substr( $data, 1 );
+    }
+  else
+    {
+    $hr = $proto->{ 'unpack' }->( substr( $data, 1 ) );
+    confess "invalid data received from socket stream, expected HASH reference" unless ref( $hr ) eq 'HASH';
+    }
 
   return wantarray ? ( $hr, $ptype, undef ) : $hr;
 }
@@ -101,15 +113,24 @@ sub socket_protocol_write_message
 {
   my $socket  = shift;
   my $ptype   = shift;
-  my $hr      = shift;
+  my $hr      = shift; # hash reference or plain data if proto is 'b'inary
   my $timeout = shift;
 
   confess "unknown or forbidden PROTOCOL_TYPE requested [$ptype] expected one of [" . join( ',', keys %PROTOCOL_ALLOW ) . "]" unless exists $PROTOCOL_ALLOW{ $ptype };
   my $proto = $PROTOCOL_TYPES{ $ptype };
 
-  confess "expected HASH reference at arg #3" unless ref( $hr ) eq 'HASH';
+  my $data;
 
-  my $data = $ptype . $proto->{ 'pack' }->( $hr );
+  if( $ptype eq 'b' )
+    {
+    # no pack for binary messages payload
+    $data = $ptype . $hr;
+    }
+  else
+    {
+    confess "expected HASH reference at arg #3" unless ref( $hr ) eq 'HASH';
+    $data = $ptype . $proto->{ 'pack' }->( $hr );
+    }
 
   return socket_write_message( $socket, $data, $timeout );
 }
