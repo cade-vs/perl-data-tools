@@ -75,6 +75,10 @@ our @EXPORT = qw(
               hash2str_url
               url2hash
 
+              hash2json
+              hash2json_pp
+              json2hash
+
               hash_uc
               hash_lc
               hash_uc_ipl
@@ -932,6 +936,21 @@ sub url2hash
     $hash{ uc str_url_unescape( $1 ) } = str_url_unescape( $2 ) if ( /^([^=]+)=(.*)$/ );
     }
   return \%hash;
+}
+
+sub hash2json
+{
+  return encode_json( shift );
+}
+
+sub hash2json_pp
+{
+  return JSON->new()->pretty( 1 )->encode( shift );
+}
+
+sub json2hash
+{
+  return decode_json( shift );
 }
 
 ##############################################################################
