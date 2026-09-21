@@ -292,7 +292,7 @@ sub get_local_julian_day
 
 sub get_local_year
 {
-   my ( $y ) = inverse_julian_day( local_date() );
+   my ( $y ) = inverse_julian_day( local_julian_day( time() ) );
    return $y;
 }
 

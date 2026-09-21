@@ -6,6 +6,14 @@ WriteMakefile(
   VERSION_FROM    => 'lib/Data/Tools.pm',
   LICENSE         => 'gpl_2',
 
+  # the test suite uses .pl instead of the default .t
+  test            => { TESTS => 't/*.pl' },
+
+  TEST_REQUIRES   => {
+    'Test::More'                       => 0,
+    'File::Temp'                       => 0,
+    },
+
   PREREQ_PM       => {
 
     # Data::Tools
@@ -16,6 +24,9 @@ WriteMakefile(
     # Data::Tools::Time
     'Date::Calc'                       => 0,
     'Time::JulianDay'                  => 0,
+
+    # Data::Tools::Math
+    'Math::BigFloat'                   => 0,
 
     },
 

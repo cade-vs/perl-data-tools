@@ -148,7 +148,8 @@ sub socket_protocols_allow
       %PROTOCOL_ALLOW = map { $_ => 1 } keys %PROTOCOL_TYPES;
       return;
       }
-    confess "unknown or forbidden PROTOCOL_TYPE requested [$ptype] expected one of [" . join( ',', keys %PROTOCOL_ALLOW ) . "]" unless exists $PROTOCOL_ALLOW{ $ptype };
+    # %PROTOCOL_ALLOW is being rebuilt here, so check against the known types
+    confess "unknown PROTOCOL_TYPE requested [$ptype] expected one of [" . join( ',', keys %PROTOCOL_TYPES ) . "]" unless exists $PROTOCOL_TYPES{ $ptype };
     $PROTOCOL_ALLOW{ $ptype }++;
     }
 }

@@ -19,6 +19,7 @@ use Digest::Whirlpool;
 use Digest::MD5;
 use Digest::SHA1;
 use MIME::Base64;
+use Encode;
 use File::Glob;
 use Hash::Util qw( lock_hashref unlock_hashref lock_ref_keys );
 use Fcntl qw( :flock );
@@ -889,8 +890,9 @@ sub hash2str_keys
   my $hr = shift;
 
   my $str;
-  for my $k ( @_ )
+  for my $key ( @_ )
     {
+    my $k = $key; # do not modify caller's data, @_ elements are aliases
     my $v = $hr->{ $k };
     str_escape_ipl( $k );
     str_escape_ipl( $v );

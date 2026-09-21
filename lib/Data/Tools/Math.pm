@@ -53,10 +53,10 @@ sub num_round_trunc
   my $dot = shift; # precision
 
   return $num unless $dot >= 0;
-  my $bf = Math::BigFloat->new();
-  $bf->round_mode('trunc');
-  $bf->badd($num);
-  $num = $bf->ffround(-abs($dot))->bstr();
+  my $bf = Math::BigFloat->new($num);
+  # NOTE: round mode is given to ffround() here, setting it on the object
+  #       changes Math::BigFloat's global default and leaks into num_round()
+  $num = $bf->ffround(-abs($dot),'trunc')->bstr();
   return $num;
 }
 
