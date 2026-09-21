@@ -122,6 +122,46 @@ fftwalk( { TYPE => FFT_FILES, ARRAY => \@acc }, $TMP );
 ok( scalar @acc > 0, 'fftwalk() with options hash appends to ARRAY' );
 
 ##############################################################################
+# glob_tree()/fftwalk() must not loop on symlinked directories
+##############################################################################
+
+SKIP:
+{
+  my $LOOP = "$TMP/symloop";
+  dir_path_make( "$LOOP/a/b" );
+  dir_path_make( "$LOOP/shared" );
+  file_save( "$LOOP/top.txt",      'top'  );
+  file_save( "$LOOP/a/b/deep.txt", 'deep' );
+  file_save( "$LOOP/shared/s.txt", 's'    );
+
+  # 'up' points back at the top of the tree, so descending it is a loop
+  skip( 'symlinks are not supported on this system', 6 )
+      unless eval { symlink( '../../', "$LOOP/a/b/up" ) };
+
+  # two distinct symlinks to one real dir -- NOT a loop, both must still work
+  symlink( '../shared', "$LOOP/a/link1" );
+  symlink( '../shared', "$LOOP/a/link2" );
+
+  # the alarm turns a runaway walk into a failed test instead of a hung suite
+  my @g;
+  ok( eval { local $SIG{ 'ALRM' } = sub { die "timeout\n" };
+             alarm 30; @g = glob_tree( "$LOOP/*.txt" ); alarm 0; 1 },
+      'glob_tree() terminates on a symlink loop' );
+  ok( ! ( grep { m{/up/} } @g ), 'glob_tree() does not descend the looping symlink' );
+  is( scalar( grep { m{/s\.txt$} } @g ), 3,
+      'glob_tree() still reaches a shared dir through each distinct symlink' );
+
+  my $w;
+  ok( eval { local $SIG{ 'ALRM' } = sub { die "timeout\n" };
+             alarm 30; $w = fftwalk( FFT_FULL, $LOOP ); alarm 0; 1 },
+      'fftwalk( FFT_FULL ) terminates on a symlink loop' );
+  ok( ! ( grep { m{/up/} } @$w ), 'fftwalk( FFT_FULL ) does not descend the looping symlink' );
+
+  my $nf = fftwalk( FFT_ALL, $LOOP );
+  ok( ! ( grep { m{/up} } @$nf ), 'fftwalk() without FFT_FOLLOW ignores symlinked dirs' );
+}
+
+##############################################################################
 # escaping
 ##############################################################################
 
@@ -337,6 +377,28 @@ is( hex2int( int2hex( 4095 ) ), 4095, 'int2hex()/hex2int() round trip' );
 is( bcd2int( pack( 'H*', '1234' ) ), 1234,   'bcd2int()' );
 is( bcd2str( pack( 'H*', '1234' ) ), '1234', 'bcd2str()' );
 is( bcd2str( pack( 'H*', '0012' ) ), '0012', 'bcd2str() keeps leading zeroes' );
+
+is( unpack( 'H*', int2bcd( 1234 ) ),    '1234',     'int2bcd()' );
+is( unpack( 'H*', int2bcd( 5 ) ),       '05',       'int2bcd() pads an odd digit count' );
+is( unpack( 'H*', int2bcd( 0 ) ),       '00',       'int2bcd() zero' );
+is( unpack( 'H*', int2bcd( 1234, 4 ) ), '00001234', 'int2bcd() pads to the given byte length' );
+is( unpack( 'H*', int2bcd( '0012' ) ),  '12',       'int2bcd() ignores leading zeroes in the input' );
+is( bcd2str( int2bcd( '99999999999999999999' ) ), '99999999999999999999',
+    'int2bcd() converts numbers wider than an integer when given as a string' );
+
+is( bcd2int( int2bcd( 987654 ) ),    987654, 'bcd2int()/int2bcd() round trip' );
+is( bcd2int( int2bcd( 987654, 8 ) ), 987654, 'bcd2int()/int2bcd() round trip, padded' );
+is_deeply( [ map { bcd2int( int2bcd( $_ ) ) } 0 .. 300 ], [ 0 .. 300 ],
+           'int2bcd() round trips exactly over a range' );
+
+eval { int2bcd( -5 ) };
+like( $@, qr/non-negative integer/, 'int2bcd() rejects negative numbers' );
+eval { int2bcd( 'abc' ) };
+like( $@, qr/non-negative integer/, 'int2bcd() rejects non-numbers' );
+eval { int2bcd( 12345, 2 ) };
+like( $@, qr/needs more than/, 'int2bcd() rejects a number too wide for the given length' );
+eval { int2bcd( 7, 0 ) };
+like( $@, qr/positive byte length/, 'int2bcd() rejects a zero byte length' );
 
 ##############################################################################
 # format_ascii_table()

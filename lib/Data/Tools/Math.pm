@@ -98,7 +98,7 @@ Rounds $number to $precisioun places after the decimal point.
 
 =head2 num_round_trunc( $number, $precision )
 
-Same as num_trunc() but just truncates after the $precision places.
+Same as num_round() but just truncates after the $precision places.
 
 =head2 num_pow( $number, $exponent )
 

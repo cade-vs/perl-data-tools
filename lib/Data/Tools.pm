@@ -382,9 +382,11 @@ sub file_text_append
 
 sub cmd_read_from
 {
-  my @args = ref( $_[0] ) ? @{ $_[0] } : @_;
+  my $cmd = shift;
 
-  open( my $i, "-|", @args ) or return undef;
+  my @cmd = ref( $cmd ) ? @$cmd : ( $cmd );
+
+  open( my $i, "-|", @cmd ) or return undef;
   local $/ = undef;
   my $s = <$i>;
   close $i;
@@ -393,9 +395,11 @@ sub cmd_read_from
 
 sub cmd_write_to
 {
-  my @args = ref( $_[0] ) ? @{ $_[0] } : @_;
+  my $cmd = shift;
 
-  open( my $o, "|-", @args ) or return undef;
+  my @cmd = ref( $cmd ) ? @$cmd : ( $cmd );
+
+  open( my $o, "|-", @cmd ) or return undef;
   print $o @_;
   close $o;
   return 1;
@@ -820,16 +824,20 @@ sub str_password_strength
 
   my $l  = length( $p ); # remaining string length
 
-  my $lc = $p =~ tr/[a-z]/[a-z]/; # lower case letters
-  my $uc = $p =~ tr/[A-Z]/[A-Z]/; # upper case letters
-  my $dc = $p =~ tr/[0-9]/[0-9]/; # digits
+  return 0 unless $l > 0;
+
+  my $lc = $p =~ tr/a-z/a-z/; # lower case letters
+  my $uc = $p =~ tr/A-Z/A-Z/; # upper case letters
+  my $dc = $p =~ tr/0-9/0-9/; # digits
   my $sc = $l -  $lc - $uc - $dc; # special chars
 
   my $cc = ( $lc > 0 )      + ( $uc > 0 )      + ( $dc > 0 )      + ( $sc > 0 )     ; # used classes count
   my $as = ( $lc > 0 ) * 26 + ( $uc > 0 ) * 26 + ( $dc > 0 ) * 10 + ( $sc > 0 ) * 30; # alphabet size
 
-  my $cp = $cc < 2 ? 2 : 1; # class count penalty
-  my $res = log( $as ** $l ) / $cp;
+  return 0 unless $cc > 0;
+
+  my $cp  = $cc < 2 ? 2 : 1; # class count penalty
+  my $res = $l * log( $as ) / $cp;
 
   # print "<$p> l=$l   lc=$lc   uc=$uc   dc=$dc   sc=$sc   cc=$cc   as=$as   nb=$nb   ($res)\n";
 
@@ -856,11 +864,12 @@ sub str_initials
 
 sub hash2str
 {
-   my $hr = shift;
+  my $hr = shift;
 
-   my $str;
-   while( my ( $k, $v ) = each %$hr )
+  my $str;
+  for my $k ( keys %$hr )
     {
+    my $v = $hr->{ $k };
     str_escape_ipl( $k );
     str_escape_ipl( $v );
     $str .= "$k=$v\n";
@@ -920,8 +929,9 @@ sub hash2str_url
   my $hr = shift; # hash reference
 
   my $s = "";
-  while( my ( $k, $v ) = each %$hr )
+  for my $k ( keys %$hr )
     {
+    my $v = $hr->{ $k };
     $k = str_url_escape( $k );
     $v = str_url_escape( $v );
     $s .= "$k=$v\n";
@@ -1070,9 +1080,9 @@ sub hash_validate
   my $vr = shift; # hashref with expectations
 
   my @err; # invalid keys
-
-  while( my ( $k, $v ) = each %$hr )
+  for my $k ( keys %$hr )
     {
+    my $v = $hr->{ $k };
     if( ! exists $vr->{ $k } )
       {
       push @err, $k;
@@ -1338,16 +1348,31 @@ sub __glob_tree_tree_walk
   my $p = shift; # path
   my $f = shift; # file mask
   my $r = shift; # result arr-ref
+  my $s = shift; # dirs already on this branch, { "dev:ino" => 1 }
 
   #print STDERR "DEBUG: __glob_tree_tree_walk: $p -- $f [$p$f]\n";
 
   push @$r, grep { -e } sort ( File::Glob::bsd_glob( "$p$f" ) );
 
-  my @dirs = grep { -d "$p$_" } read_dir_entries( "$p/." );
+  for my $e ( read_dir_entries( "$p/." ) )
+    {
+    next unless defined $e;
+    my $ep = "$p$e";
+    next unless -d $ep;
 
-  #print STDERR "DEBUG: __glob_tree_tree_walk: $p -- $f [$p*] dirs: (@dirs)\n\n";
+    # stat( _ ) reuses the buffer filled by -d above, so this costs no syscall.
+    # -d follows symlinks, so this is the identity of the directory we would
+    # descend into, which is exactly what has to be checked for a loop
+    my @st = stat( _ );
+    next unless @st;
+    my $id = "$st[0]:$st[1]";
 
-  __glob_tree_tree_walk( "$p$_/", $f, $r ) for @dirs;
+    next if $s->{ $id }; # already an ancestor on this branch -- symlink loop
+
+    $s->{ $id } = 1;
+    __glob_tree_tree_walk( "$ep/", $f, $r, $s );
+    delete $s->{ $id };  # left the branch, the dir may appear on another one
+    }
 
   return 1;
 }
@@ -1360,7 +1385,13 @@ sub glob_tree
     die "glob_tree: invalid argument" unless /^(.*?\/)([^\/]+)$/;
     my $p = $1;
     my $f = $2;
-    __glob_tree_tree_walk( $p, $f, \@res );
+
+    # per argument, so overlapping arguments still each produce their results
+    my %seen;
+    my @st = stat( $p );
+    $seen{ "$st[0]:$st[1]" } = 1 if @st;
+
+    __glob_tree_tree_walk( $p, $f, \@res, \%seen );
     }
   return @res;
 }
@@ -1369,7 +1400,7 @@ sub read_dir_entries
 {
   my $p = shift; # path
 
-  opendir( my $dir, $p ) or return undef;
+  opendir( my $dir, $p ) or return ();
   my @e = sort grep { !/^\.\.?$/ } readdir $dir;
   closedir( $dir );
 
@@ -1401,6 +1432,7 @@ sub __fftwalk
   my $e  = shift; # directory entry to traverse
   my $a  = shift; # results array ref
   my $ty = shift; # typemap, see FFTs above
+  my $s  = shift; # dirs already on this branch, { "dev:ino" => 1 }
 
   print "debug: __fftwalk [$e]\n" if $ty & FFT_DEBUG;
 
@@ -1412,12 +1444,24 @@ sub __fftwalk
     my $eee = "$e/$ee";
 
     my $is_dir  = -d $eee;
+    # stat( _ ) reuses the buffer filled by -d, so this costs no syscall and
+    # must be read before -l below, which refills the buffer with lstat data
+    my @st      = $is_dir ? stat( _ ) : ();
     my $is_link = -l $eee;
 
     if( $is_dir )
       {
       push @$a, $eee if $is_link ? $ty & FFT_DIRS && $ty & FFT_SYMD : $ty & FFT_DIRS;
-      __fftwalk( $eee, $a, $ty ) if ! $is_link or $ty & FFT_FOLLOW;
+
+      next unless ! $is_link or $ty & FFT_FOLLOW;
+      next unless @st;
+      my $id = "$st[0]:$st[1]";
+
+      next if $s->{ $id }; # already an ancestor on this branch -- symlink loop
+
+      $s->{ $id } = 1;
+      __fftwalk( $eee, $a, $ty, $s );
+      delete $s->{ $id }; # left the branch, the dir may appear on another one
       }
     else
       {
@@ -1473,7 +1517,15 @@ sub fftwalk
 
   return $a unless $ty > 0; # do nothing if TYPE is zero
 
-  __fftwalk( $_, $a, $ty ) for @_;
+  for my $e ( @_ )
+    {
+    # per start directory, so several start dirs still each produce results
+    my %seen;
+    my @st = stat( $e );
+    $seen{ "$st[0]:$st[1]" } = 1 if @st;
+
+    __fftwalk( $e, $a, $ty, \%seen );
+    }
   return $a;
 }
 
@@ -1525,12 +1577,38 @@ sub bcd2int
   return $int;
 }
 
+# int2bcd( $int, $len )
+# produces packed BCD, two decimal digits per byte, most significant first,
+# i.e. the exact inverse of bcd2int(). $len is the wanted result size in bytes,
+# the result is left padded with zeroes to reach it. if $len is omitted the
+# smallest size that holds the number is used. $int is taken as a decimal
+# string, so numbers wider than an integer still convert exactly, as long as
+# they are passed as strings -- a bare numeric literal is numified by perl
+# before it ever reaches here.
 sub int2bcd
 {
   my $int = shift;
-  my $len = shift; # in how many bytes to produce bcd
+  my $len = shift; # in how many bytes to produce bcd, optional
 
-  die "int2bcd() is not yet implemented";
+  die "int2bcd(): expected a non-negative integer, got [$int]\n"
+      unless $int =~ /^\s*\+?(\d+)\s*$/;
+
+  my $str = $1;
+  $str =~ s/^0+(?=\d)//; # strip leading zeroes but keep a single 0
+
+  if( defined $len )
+    {
+    die "int2bcd(): expected a positive byte length, got [$len]\n"
+        unless $len =~ /^\s*\+?(\d+)\s*$/ and $1 > 0;
+    $len = $1;
+    die "int2bcd(): [$str] needs more than [$len] bytes\n" if length( $str ) > $len * 2;
+    }
+  else
+    {
+    $len = int( ( length( $str ) + 1 ) / 2 );
+    }
+
+  return pack 'H*', ( '0' x ( $len * 2 - length( $str ) ) ) . $str;
 }
 
 sub bcd2str
@@ -1575,19 +1653,23 @@ sub format_ascii_table
   my $wt; # width total
   my $cs; # columns
 
-  if( $opt{ 'FMT' } )
-    {
-    for( @{ shift @$data } )
-      {
-      my ( $a, $w ) = ( '<', 0 );
-      ( $a, $w ) = ( $1, $2 ) if /^\s*([<>\|])\s*(\d+)?/;
-      push @fma, $a;
-      push @fmw, $w;
-      }
-    }
+  my $r;
 
+  $r = 0;
   for my $row ( @$data )
     {
+    if( $opt{ 'FMT' } and $r == 0  )
+      {
+      for( @$row )
+        {
+        my ( $a, $w ) = ( '<', 0 );
+        ( $a, $w ) = ( $1, $2 ) if /^\s*([<>\|])\s*(\d+)?/;
+        push @fma, $a;
+        push @fmw, $w;
+        }
+      $r++;
+      next;
+      }
     my $c = 0;
     for my $d ( @$row )
       {
@@ -1596,6 +1678,7 @@ sub format_ascii_table
       $c++;
       }
     $cs = $c if $c > $cs;
+    $r++;
     }
 
   $wt += $_ + 2 for @fmw; # plus 2 for one char spacing around borders
@@ -1604,10 +1687,11 @@ sub format_ascii_table
   my $sep = '+' . ( '-' x ( $wt - 2 ) ) . '+' . "\n";
   my $tx;
 
-  my $r = 0;
+  $r = 0;
   $tx .= $sep;
   for my $row ( @$data )
     {
+    $r++, next if $opt{ 'FMT' } and $r == 0;
     $tx .= '|';
     for my $c ( 0 .. $cs - 1 )
       {
@@ -1625,7 +1709,7 @@ sub format_ascii_table
       $tx .= ' ' . $v . ' |';
       }
     $tx .= "\n";
-    $tx .= $sep if $r == 0;
+    $tx .= $sep if $r == ( $opt{ 'FMT' } ? 1 : 0 );
     $r++;
     }
   $tx .= $sep;
@@ -1676,8 +1760,11 @@ INIT  { __url_escapes_init(); }
 
   # --------------------------------------------------------------------------
 
-  data_tools_set_file_io_encoding( 'UTF-8' ); # all file IO will use UTF-8
-  data_tools_set_file_io_encoding( ':RAW' );  # all file IO will use binary data
+  # these set the encoding used by the file_text_* functions only:
+
+  data_tools_set_text_io_encoding( 'UTF-8' ); # file_text_* io will use UTF-8
+  data_tools_set_text_io_utf8();              # the same, shortcut
+  data_tools_set_text_io_bin();               # file_text_* io will use binary data
 
   my $res  = file_save( $file_name, 'file content here' );
   my $data = file_load( $file_name );
@@ -1690,6 +1777,11 @@ INIT  { __url_escapes_init(); }
   my $data = file_load( { FILE_NAME => $file_name, ENCODING => 'UTF-8' } );
 
   my $data_arrayref = file_load_ar( { FILE_NAME => $fname, ENCODING => 'UTF-8' } );
+
+  # ':RAW' => 1 reads/writes binary data:
+
+  my $res  = file_save( { FILE_NAME => $file_name, ':RAW' => 1 }, $binary_data );
+  my $data = file_load( { FILE_NAME => $file_name, ':RAW' => 1 } );
 
   # --------------------------------------------------------------------------
 

@@ -61,7 +61,44 @@ my $JD = julian_date_from_ymd( 2020, 2, 15 ); # a Saturday, leap year
 
 cmp_ok( $JD, '>', 2400000, 'julian_date_from_ymd() returns a julian day number' );
 is_deeply( [ julian_date_to_ymd( $JD ) ], [ 2020, 2, 15 ], 'julian_date_to_ymd()' );
-is( julian_date_to_iso( $JD ), '2020-2-15', 'julian_date_to_iso()' );
+is( julian_date_to_iso( $JD ), '2020-02-15', 'julian_date_to_iso() writes the zero padded extended form' );
+
+# julian_date_from_iso() takes the same formats as utime_from_iso()/_ext()
+is( julian_date_from_iso( '20200215' ),            $JD, 'julian_date_from_iso() basic format' );
+is( julian_date_from_iso( '2020-02-15' ),          $JD, 'julian_date_from_iso() extended format' );
+is( julian_date_from_iso( '20200215T103045' ),     $JD, 'julian_date_from_iso() basic format with time' );
+is( julian_date_from_iso( '2020-02-15T10:30:45' ), $JD, 'julian_date_from_iso() extended format with time' );
+is( julian_date_from_iso( '2020-02-15 10:30:45' ), $JD, 'julian_date_from_iso() accepts a space separator' );
+is( julian_date_from_iso( ' 20200215 ' ),          $JD, 'julian_date_from_iso() tolerates surrounding space' );
+
+is( julian_date_from_iso( '2020-2-15' ),           undef, 'julian_date_from_iso() requires zero padded fields' );
+is( julian_date_from_iso( '2020-02-30' ),          undef, 'julian_date_from_iso() rejects a non-existent date' );
+is( julian_date_from_iso( '2020-13-01' ),          undef, 'julian_date_from_iso() rejects an impossible month' );
+is( julian_date_from_iso( '20200215T250000' ),     undef, 'julian_date_from_iso() rejects an impossible time' );
+is( julian_date_from_iso( '2020-02' ),             undef, 'julian_date_from_iso() rejects a partial date' );
+is( julian_date_from_iso( 'nonsense' ),            undef, 'julian_date_from_iso() rejects garbage' );
+
+# every date string the utime parsers accept must parse here too, and no other
+for my $iso ( '20200215T103045', '2020-02-15T10:30:45' )
+  {
+  is( julian_date_from_iso( $iso ), julian_date_from_utime( utime_from_iso( $iso ) // utime_from_iso_ext( $iso ) ),
+      "julian_date_from_iso() agrees with the utime parsers on [$iso]" );
+  }
+
+is( julian_date_from_iso( julian_date_to_iso( $JD ) ), $JD,
+    'julian_date_to_iso()/julian_date_from_iso() round trip' );
+
+{
+  my $bad = 0;
+  my $j0  = julian_date_from_ymd( 2019, 1, 1 );
+  for my $jd ( $j0 .. $j0 + 800 )
+    {
+    my ( $y, $m, $d ) = julian_date_to_ymd( $jd );
+    $bad++ unless julian_date_from_iso( julian_date_to_iso( $jd ) ) == $jd;
+    $bad++ unless julian_date_from_iso( sprintf( '%04d%02d%02d', $y, $m, $d ) ) == $jd;
+    }
+  is( $bad, 0, 'julian_date_from_iso() round trips exactly over a range of dates' );
+}
 
 is( julian_date_from_ymd( 2020 ),    julian_date_from_ymd( 2020, 1, 1 ), 'julian_date_from_ymd() defaults month/day to 1' );
 is( julian_date_from_ymd( 2020, 3 ), julian_date_from_ymd( 2020, 3, 1 ), 'julian_date_from_ymd() defaults day to 1' );
@@ -72,19 +109,19 @@ is( julian_date_get_year(  $JD ), 2020, 'julian_date_get_year()' );
 is( julian_date_get_dow(   $JD ), 6,    'julian_date_get_dow() returns ISO8601 Mon=1..Sun=7' );
 is( julian_date_get_dow( $JD + 1 ), 7,  'julian_date_get_dow() returns 7 for Sunday' );
 
-is( julian_date_to_iso( julian_date_goto_first_dow( $JD ) ), '2020-2-10', 'julian_date_goto_first_dow() goes to Monday' );
-is( julian_date_to_iso( julian_date_goto_last_dow(  $JD ) ), '2020-2-16', 'julian_date_goto_last_dow() goes to Sunday' );
-is( julian_date_to_iso( julian_date_goto_first_dom( $JD ) ), '2020-2-1',  'julian_date_goto_first_dom()' );
-is( julian_date_to_iso( julian_date_goto_last_dom(  $JD ) ), '2020-2-29', 'julian_date_goto_last_dom() handles leap year' );
-is( julian_date_to_iso( julian_date_goto_first_doy( $JD ) ), '2020-1-1',  'julian_date_goto_first_doy()' );
+is( julian_date_to_iso( julian_date_goto_first_dow( $JD ) ), '2020-02-10', 'julian_date_goto_first_dow() goes to Monday' );
+is( julian_date_to_iso( julian_date_goto_last_dow(  $JD ) ), '2020-02-16', 'julian_date_goto_last_dow() goes to Sunday' );
+is( julian_date_to_iso( julian_date_goto_first_dom( $JD ) ), '2020-02-01', 'julian_date_goto_first_dom()' );
+is( julian_date_to_iso( julian_date_goto_last_dom(  $JD ) ), '2020-02-29', 'julian_date_goto_last_dom() handles leap year' );
+is( julian_date_to_iso( julian_date_goto_first_doy( $JD ) ), '2020-01-01', 'julian_date_goto_first_doy()' );
 is( julian_date_to_iso( julian_date_goto_last_doy(  $JD ) ), '2020-12-31','julian_date_goto_last_doy()' );
 
 is( julian_date_month_days( $JD ), 29, 'julian_date_month_days() leap february' );
 is( julian_date_month_days_ym( 2021, 2 ), 28, 'julian_date_month_days_ym() non-leap february' );
 is( julian_date_month_days_ym( 2020, 1 ), 31, 'julian_date_month_days_ym() january' );
 
-is( julian_date_to_iso( julian_date_add_ymd( $JD, 1, 1, 1 ) ), '2021-3-16', 'julian_date_add_ymd() positive delta' );
-is( julian_date_to_iso( julian_date_add_ymd( $JD, -1, 0, 0 ) ), '2019-2-15', 'julian_date_add_ymd() negative delta' );
+is( julian_date_to_iso( julian_date_add_ymd( $JD, 1, 1, 1 ) ), '2021-03-16', 'julian_date_add_ymd() positive delta' );
+is( julian_date_to_iso( julian_date_add_ymd( $JD, -1, 0, 0 ) ), '2019-02-15', 'julian_date_add_ymd() negative delta' );
 is( julian_date_add_ymd( $JD, 0, 0, 0 ), $JD, 'julian_date_add_ymd() zero delta' );
 
 is( get_year_month_days( 2020, 2 ), 29, 'get_year_month_days()' );
@@ -114,6 +151,44 @@ is( utime_from_ymdhms( 2020, 2, 15 ), utime_from_ymdhms( 2020, 2, 15, 0, 0, 0 ),
 
 is( utime_to_iso(     $UT ), '20200215T103045',       'utime_to_iso() basic format' );
 is( utime_to_iso_ext( $UT ), '2020-02-15T10:30:45',   'utime_to_iso_ext() extended format' );
+
+is( utime_from_iso( '20200215T103045' ), $UT,         'utime_from_iso()' );
+is( utime_from_iso( '20200215' ), utime_from_ymdhms( 2020, 2, 15, 0, 0, 0 ),
+    'utime_from_iso() defaults a missing time to midnight' );
+is( utime_from_iso( ' 20200215T103045 ' ), $UT,       'utime_from_iso() tolerates surrounding space' );
+
+is( utime_from_iso_ext( '2020-02-15T10:30:45' ), $UT, 'utime_from_iso_ext()' );
+is( utime_from_iso_ext( '2020-02-15 10:30:45' ), $UT, 'utime_from_iso_ext() accepts a space separator' );
+is( utime_from_iso_ext( '2020-02-15' ), utime_from_ymdhms( 2020, 2, 15, 0, 0, 0 ),
+    'utime_from_iso_ext() defaults a missing time to midnight' );
+
+is( utime_from_iso( utime_to_iso( $UT ) ), $UT,             'utime_to_iso()/utime_from_iso() round trip' );
+is( utime_from_iso_ext( utime_to_iso_ext( $UT ) ), $UT,     'utime_to_iso_ext()/utime_from_iso_ext() round trip' );
+
+# the two formats are strict about each other
+is( utime_from_iso( '2020-02-15T10:30:45' ), undef, 'utime_from_iso() rejects the extended format' );
+is( utime_from_iso_ext( '20200215T103045' ), undef, 'utime_from_iso_ext() rejects the basic format' );
+
+# malformed or impossible input yields undef rather than dying
+is( utime_from_iso( 'nonsense' ),            undef, 'utime_from_iso() rejects garbage' );
+is( utime_from_iso( '2020021' ),             undef, 'utime_from_iso() rejects a short date' );
+is( utime_from_iso( '20200230T000000' ),     undef, 'utime_from_iso() rejects a non-existent date' );
+is( utime_from_iso( '20200215T250000' ),     undef, 'utime_from_iso() rejects an impossible time' );
+is( utime_from_iso_ext( '2020-2-15' ),       undef, 'utime_from_iso_ext() requires zero padded fields' );
+is( utime_from_iso_ext( '2020-02-30' ),      undef, 'utime_from_iso_ext() rejects a non-existent date' );
+
+# round trip a spread of instants, crossing DST in whichever zone we run in
+{
+  my $bad = 0;
+  my $t0  = utime_from_ymdhms( 2021, 1, 1, 0, 0, 0 );
+  for my $i ( 0 .. 200 )
+    {
+    my $t = $t0 + $i * 36000 + 997 * $i;
+    $bad++ unless utime_from_iso(     utime_to_iso(     $t ) ) == $t;
+    $bad++ unless utime_from_iso_ext( utime_to_iso_ext( $t ) ) == $t;
+    }
+  is( $bad, 0, 'iso round trip is exact across a spread of instants' );
+}
 
 is( julian_date_from_utime( $UT ), $JD, 'julian_date_from_utime()' );
 is( utime_from_julian_date( $JD ), utime_from_ymdhms( 2020, 2, 15, 0, 0, 0 ),

@@ -258,4 +258,143 @@ sub protocol_type_hash_url_unpack
 }
 
 ##############################################################################
+
+=pod
+
+
+=head1 NAME
+
+  Data::Tools::Socket::Protocols provides transparent serialization on top
+  of the Data::Tools::Socket message functions.
+
+=head1 SYNOPSIS
+
+  use Data::Tools::Socket::Protocols qw( :all );  # import all functions
+  use Data::Tools::Socket::Protocols;             # the same as :all :)
+  use Data::Tools::Socket::Protocols qw( :none ); # do not import anything
+
+  # --------------------------------------------------------------------------
+
+  # send a hash reference, serialized with the 'j'son protocol
+  socket_protocol_write_message( $socket, 'j', $hash_ref, $timeout );
+
+  # read it back, the protocol type is taken from the message itself
+  my $hash_ref = socket_protocol_read_message( $socket, $timeout );
+
+  # in list context the protocol type and an error string are returned too
+  my ( $hash_ref, $ptype, $error ) =
+      socket_protocol_read_message( $socket, $timeout );
+
+  # the 'b'inary protocol carries plain data instead of a hash reference
+  socket_protocol_write_message( $socket, 'b', $raw_data, $timeout );
+
+  # --------------------------------------------------------------------------
+
+  # restrict which protocol types will be accepted and sent
+  socket_protocols_allow( 'bjh' );      # only binary, json and hash
+  socket_protocols_allow( 'b', 'jh' );  # the same, arguments are concatenated
+  socket_protocols_allow( '*' );        # allow all of them again
+
+  # --------------------------------------------------------------------------
+
+=head1 PROTOCOL TYPES
+
+A protocol type is a single character, sent as the first byte of every
+message. The rest of the message is the payload, serialized accordingly:
+
+  'b'  binary,        payload is plain data, not a hash reference
+  'p'  Storable       (nfreeze/thaw)
+  'e'  Sereal
+  's'  Data::Stacker
+  'j'  JSON
+  'x'  XML::Simple
+  'h'  hash2str()     from Data::Tools, needs no extra module
+  'H'  hash2str_url() from Data::Tools, needs no extra module
+
+Except for 'b', the payload is always a hash reference.
+
+The module needed by a protocol type is loaded on demand, the first time
+that type is actually used, so a missing module is only a problem if the
+corresponding protocol type is used. 'b', 'h' and 'H' need no extra module.
+
+  NOTE: Storable is a core module and JSON is already required by
+        Data::Tools, so those types work out of the box. Sereal,
+        Data::Stacker and XML::Simple are not required by this
+        distribution and may need to be installed separately.
+
+=head1 FUNCTIONS
+
+=head2 socket_protocol_write_message( $socket, $ptype, $data, $timeout )
+
+Serializes $data according to the $ptype protocol type, prefixes it with the
+protocol type character and sends it with socket_write_message().
+
+$data must be a hash reference, unless $ptype is 'b', in which case it is
+plain data.
+
+Returns 1 on success or undef if the message could not be sent.
+
+Confesses if $ptype is not a known or currently allowed protocol type, or if
+$data is not a hash reference for a non-binary protocol type.
+
+=head2 socket_protocol_read_message( $socket, $timeout, $opt )
+
+Reads a message with socket_read_message(), takes the protocol type from its
+first byte and deserializes the rest accordingly.
+
+In scalar context returns the deserialized data, or undef on error.
+
+In list context returns:
+
+  ( $data, $ptype, $error )
+
+$error is undef when everything went fine, otherwise it is one of the error
+strings of socket_read_message(), or 'E_EMPTY' if the message carries no
+protocol type byte or no payload after it.
+
+Confesses if the incoming protocol type is not known or not currently
+allowed, or if a non-binary protocol type does not deserialize into a hash
+reference.
+
+=head2 socket_protocols_allow( @protocol_types )
+
+Restricts which protocol types will be accepted and sent. The arguments are
+concatenated and then split into single characters, so these are the same:
+
+  socket_protocols_allow( 'bjh' );
+  socket_protocols_allow( 'b', 'j', 'h' );
+
+A single '*' allows all known protocol types again.
+
+By default all protocol types are allowed. Confesses if an unknown protocol
+type is given, in which case the allowed set is left incomplete, so pass all
+wanted types in one call.
+
+=head1 REQUIRED MODULES
+
+Data::Tools::Socket::Protocols uses:
+
+  * Data::Tools
+  * Data::Tools::Socket
+
+and, on demand and only for the corresponding protocol types:
+
+  * Storable, Sereal, Data::Stacker, JSON, XML::Simple
+
+=head1 GITHUB REPOSITORY
+
+  git@github.com:cade-vs/perl-data-tools.git
+
+  git clone git://github.com/cade-vs/perl-data-tools.git
+
+=head1 AUTHOR
+
+  Vladi Belperchinov-Shabanski "Cade"
+        <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+  http://cade.noxrun.com/
+
+
+=cut
+
+##############################################################################
 1;
