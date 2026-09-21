@@ -17,13 +17,6 @@ WriteMakefile(
     'Date::Calc'                       => 0,
     'Time::JulianDay'                  => 0,
 
-    # Data::Tools::Crypto::*  (the Crypt:: modules all come from CryptX)
-    'Crypt::AuthEnc::ChaCha20Poly1305' => 0,
-    'Crypt::Digest'                    => 0,
-    'Crypt::PK::RSA'                   => 0,
-    'Crypt::PRNG'                      => 0,
-    'Exception::Sink'                  => 0,
-
     },
 
   META_MERGE      => {
