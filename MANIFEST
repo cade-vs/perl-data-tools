@@ -10,4 +10,8 @@ lib/Data/Tools/Time.pm
 lib/Data/Tools/Math.pm
 lib/Data/Tools/CSV.pm
 lib/Data/Tools/Process.pm
+lib/Data/Tools/Process/Forks.pm
 lib/Data/Tools/Serialization.pm
+lib/Data/Tools/Crypto/Base.pm
+lib/Data/Tools/Crypto/Symmetric.pm
+lib/Data/Tools/Crypto/RSA.pm

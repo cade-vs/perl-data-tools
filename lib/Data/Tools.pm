@@ -23,7 +23,7 @@ use File::Glob;
 use Hash::Util qw( lock_hashref unlock_hashref lock_ref_keys );
 use Fcntl qw( :flock );
 
-our $VERSION = '1.50';
+our $VERSION = '1.52';
 
 our @ISA    = qw( Exporter );
 our @EXPORT = qw(
