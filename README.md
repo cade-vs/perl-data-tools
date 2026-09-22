@@ -207,6 +207,7 @@ However it uses some 3rd party modules:
     * Digest::Whirlpool
     * Digest::MD5
     * Digest::SHA1
+    * JSON
 
 # SEE ALSO
 
@@ -299,7 +300,6 @@ $timeout is optional, it is in seconds and can be less than 1 second.
 
 Data::Tools::Socket uses:
 
-    * IO::Select
     * Time::HiRes
 
 # GITHUB REPOSITORY
@@ -880,7 +880,7 @@ code and do something like:
         
 
 **Note:** If the current number of active forks equals or exceeds the maximum
-(see ["forks\_set\_max"](#forks_set_max)), this function blocks until a child exits before
+(see `forks_set_max()`), this function blocks until a child exits before
 forking the new process.
 
 ### forks\_wait\_one( $non\_blocking )
@@ -994,7 +994,7 @@ Sets the maximum number of concurrent child processes (slots).
 
     Maximum number of concurrent forks. Values less than 1 are clamped to 4.
 
-When ["forks\_start\_one"](#forks_start_one) is called and the current fork count (slots) equals 
+When `forks_start_one()` is called and the current fork count (slots) equals 
 or exceeds this maximum, it will wait until a child exits before forking.
 
 Default value is 4.

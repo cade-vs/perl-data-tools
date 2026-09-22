@@ -12,8 +12,6 @@ package Data::Tools::Serialization;
 use strict;
 use Exporter;
 use Carp;
-use Data::Tools;
-use Math::BigFloat;
 use JSON;
 
 our $VERSION = '1.52';

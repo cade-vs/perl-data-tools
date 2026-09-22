@@ -373,7 +373,7 @@ child code will be executed in the parent process!
 =back
 
 B<Note:> If the current number of active forks equals or exceeds the maximum
-(see L</forks_set_max>), this function blocks until a child exits before
+(see C<forks_set_max()>), this function blocks until a child exits before
 forking the new process.
 
 =head3 forks_wait_one( $non_blocking )
@@ -502,7 +502,7 @@ Maximum number of concurrent forks. Values less than 1 are clamped to 4.
 
 =back
 
-When L</forks_start_one> is called and the current fork count (slots) equals 
+When C<forks_start_one()> is called and the current fork count (slots) equals 
 or exceeds this maximum, it will wait until a child exits before forking.
 
 Default value is 4.

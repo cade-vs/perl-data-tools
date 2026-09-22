@@ -269,7 +269,6 @@ $timeout is optional, it is in seconds and can be less than 1 second.
 
 Data::Tools::Socket uses:
 
-  * IO::Select
   * Time::HiRes
 
 =head1 GITHUB REPOSITORY

@@ -1957,6 +1957,7 @@ However it uses some 3rd party modules:
   * Digest::Whirlpool
   * Digest::MD5
   * Digest::SHA1
+  * JSON
 
 =head1 SEE ALSO
 
