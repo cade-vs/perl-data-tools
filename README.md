@@ -5,25 +5,33 @@
 # SYNOPSIS
 
     use Data::Tools qw( :all );  # import all functions
-    use Data::Tools;             # the same as :all :) 
+    use Data::Tools;             # the same as :all :)
     use Data::Tools qw( :none ); # do not import anything, use full package names
 
     # --------------------------------------------------------------------------
 
-    data_tools_set_file_io_encoding( 'UTF-8' ); # all file IO will use UTF-8
-    data_tools_set_file_io_encoding( ':RAW' );  # all file IO will use binary data
+    # these set the encoding used by the file_text_* functions only:
+
+    data_tools_set_text_io_encoding( 'UTF-8' ); # file_text_* io will use UTF-8
+    data_tools_set_text_io_utf8();              # the same, shortcut
+    data_tools_set_text_io_bin();               # file_text_* io will use binary data
 
     my $res  = file_save( $file_name, 'file content here' );
     my $data = file_load( $file_name );
 
     my $data_arrayref = file_load_ar( $file_name );
-    
+
     # for specific charset encoding and because of backward compatibility:
 
     my $res  = file_save( { FILE_NAME => $file_name, ENCODING => 'UTF-8' }, 'data' );
     my $data = file_load( { FILE_NAME => $file_name, ENCODING => 'UTF-8' } );
 
     my $data_arrayref = file_load_ar( { FILE_NAME => $fname, ENCODING => 'UTF-8' } );
+
+    # ':RAW' => 1 reads/writes binary data:
+
+    my $res  = file_save( { FILE_NAME => $file_name, ':RAW' => 1 }, $binary_data );
+    my $data = file_load( { FILE_NAME => $file_name, ':RAW' => 1 } );
 
     # --------------------------------------------------------------------------
 
@@ -33,7 +41,7 @@
     my $file_size                         = file_size(  $file_name );
 
     # --------------------------------------------------------------------------
-    
+
     my $res  = dir_path_make( '/path/to/somewhere' ); # create full path with 0700
     my $res  = dir_path_make( '/new/path', MASK => 0755 ); # ...with mask 0755
     my $path = dir_path_ensure( '/path/s/t/h' ); # ensure path exists, check+make
@@ -42,7 +50,7 @@
 
     my $path_with_trailing_slash = file_path( $full_path_or_file_name );
 
-    # file_name() and file_name_ext() return full name with leadeing 
+    # file_name() and file_name_ext() return full name with leadeing
     # dot for dot-files ( .filename )
     my $file_name_including_ext  = file_name_ext( $full_path_or_file_name );
     my $file_name_only_no_ext    = file_name( $full_path_or_file_name );
@@ -51,7 +59,7 @@
     my $file_ext_only            = file_ext( $full_path_or_file_name );
 
     # --------------------------------------------------------------------------
-    
+
     # uses simple backslash escaping of \n, = and \ itself
     my $data_str = hash2str( $hash_ref ); # convert hash to string "key=value\n"
     my $hash_ref = str2hash( $hash_str ); # convert str "key-value\n" to hash
@@ -63,7 +71,7 @@
     # same as hash2str() and str2hash() but uses URL-style escaping
     my $data_str = hash2str_url( $hash_ref ); # convert hash to string "key=value\n"
     my $hash_ref = str2hash_url( $hash_str ); # convert str "key-value\n" to hash
-    
+
     my $hash_ref = url2hash( 'key1=val1&key2=val2&testing=tralala);
     # $hash_ref will be { key1 => 'val1', key2 => 'val2', testing => 'tralala' }
 
@@ -72,20 +80,20 @@
 
     hash_uc_ipl( $hash_ref_to_be_converted_to_upper_case_keys );
     hash_lc_ipl( $hash_ref_to_be_converted_to_lower_case_keys );
-    
+
     # save/load hash in str_url_escaped form to/from a file
     my $res      = hash_save( $file_name, $hash_ref );
     my $hash_ref = hash_load( $file_name );
 
     # save hash with certain keys order, uses hash2str_keys()
     my $res      = hash_save( $file_name, \%hash, sort keys %hash );
-    
+
     # same as hash_save() and hash_load() but uses hash2str_url() and str2hash_url()
     my $res      = hash_save_url( $file_name, $hash_ref );
     my $hash_ref = hash_load_url( $file_name );
 
     # validate (nested) hash by example
-    
+
     # validation example nested hash
     my $validate_hr = {
                       A => 'INT',
@@ -97,8 +105,8 @@
                            },
                       DIR1  => '-d',   # must be existing directory
                       DIR2  => 'dir',  # must be existing directory
-                      FILE1 => '-f',   # must be existing file  
-                      FILE2 => 'file', # must be existing file  
+                      FILE1 => '-f',   # must be existing file
+                      FILE2 => 'file', # must be existing file
                       };
     # actual nested hash to be verified if looks like the example
     my $data_hr     = {
@@ -109,24 +117,24 @@
                            E => '123abc',
                            F => '456FFF',
                            },
-                      }               
-    
+                      }
+
     my @invalid_keys = hash_validate( $data_hr, $validate_hr );
     print "YES!" if hash_validate( $data_hr, $validate_hr );
 
     # --------------------------------------------------------------------------
-    
+
     my $escaped   = str_url_escape( $plain_str ); # URL-style %XX escaping
     my $plain_str = str_url_unescape( $escaped );
 
     my $escaped   = str_html_escape( $plain_str ); # HTML-style &name; escaping
     my $plain_str = str_html_unescape( $escaped );
-    
+
     my $hex_str   = str_hex( $plain_str ); # HEX-style XX string escaping
     my $plain_str = str_unhex( $hex_str );
 
     # --------------------------------------------------------------------------
-    
+
     # converts perl package names to file names, f.e: returns "Data/Tools.pm"
     my $perl_pkg_fn = perl_package_to_file( 'Data::Tools' );
 
@@ -147,7 +155,7 @@
                         # returns 'day'  for $dc == 1
                         # returns 'days' for $dc >  1
 
-    my $num = str_kmg_to_num(   '1K' ); # returns 1024   
+    my $num = str_kmg_to_num(   '1K' ); # returns 1024
     my $num = str_kmg_to_num( '2.5M' ); # returns 2621440
     my $num = str_kmg_to_num(   '1T' ); # returns 1099511627776
 
@@ -176,7 +184,7 @@ keys (possibly key paths like 'KEY1/KEY2/KEY3'):
 
     # array context
     my @invalid_keys = hash_validate( $data_hr, $validate_hr );
-    
+
     # scalar context
     print "YES!" if hash_validate( $data_hr, $validate_hr );
 
@@ -193,7 +201,7 @@ Data::Tools package includes several sub-modules:
 
 # REQUIRED MODULES
 
-Data::Tools is designed to be simple, compact and self sufficient. 
+Data::Tools is designed to be simple, compact and self sufficient.
 However it uses some 3rd party modules:
 
     * Digest::Whirlpool
@@ -202,21 +210,20 @@ However it uses some 3rd party modules:
 
 # SEE ALSO
 
-For more complex cases of nested hash validation, 
+For more complex cases of nested hash validation,
 check Data::Validate::Struct module by Thomas Linden, cheers :)
 
 # GITHUB REPOSITORY
 
     git@github.com:cade-vs/perl-data-tools.git
-    
+
     git clone git://github.com/cade-vs/perl-data-tools.git
-    
 
 # AUTHOR
 
     Vladi Belperchinov-Shabanski "Cade"
           <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
-    http://cade.noxrun.com/  
+    http://cade.noxrun.com/
 # NAME
 
     Data::Tools::Socket provides set of socket I/O functions.
@@ -224,7 +231,7 @@ check Data::Validate::Struct module by Thomas Linden, cheers :)
 # SYNOPSIS
 
     use Data::Tools::Socket qw( :all );  # import all functions
-    use Data::Tools::Socket;             # the same as :all :) 
+    use Data::Tools::Socket;             # the same as :all :)
     use Data::Tools::Socket qw( :none ); # do not import anything, use full package names
 
     # --------------------------------------------------------------------------
@@ -244,7 +251,7 @@ check Data::Validate::Struct module by Thomas Linden, cheers :)
 
 ## socket\_read(  $socket, $data\_ref, $length, $timeout )
 
-Reads $length sized data from the $socket and store it to $data\_ref scalar 
+Reads $length sized data from the $socket and store it to $data\_ref scalar
 reference.
 
 Returns read length (can be shorter than requested $length);
@@ -277,7 +284,7 @@ $timeout is optional, it is in seconds and can be less than 1 second.
 ## socket\_write\_message( $socket, $data, $timeout )
 
 Writes 32bit network-order integer, which is the size of the given $data to be
-written to the $socket and then writes the data 
+written to the $socket and then writes the data
 (i.e. message = 32bit-integer + data ).
 
 Returns 1 on success or undef for message or network error.
@@ -298,15 +305,14 @@ Data::Tools::Socket uses:
 # GITHUB REPOSITORY
 
     git@github.com:cade-vs/perl-data-tools.git
-    
+
     git clone git://github.com/cade-vs/perl-data-tools.git
-    
 
 # AUTHOR
 
     Vladi Belperchinov-Shabanski "Cade"
           <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
-    http://cade.noxrun.com/  
+    http://cade.noxrun.com/
 # NAME
 
     Data::Tools::Time provides set of basic functions for time processing.
@@ -385,7 +391,7 @@ Same as unix\_time\_diff\_in\_words() but returns relative text
 
 Returns human-friendly text for the given date difference (in days).
 This function returns absolute difference text, for relative 
-(before/after/ago/in) see julian\_day\_diff\_in\_words\_relative().
+(before/after/ago/in) see julian\_date\_diff\_in\_words\_relative().
 
 ## julian\_date\_diff\_in\_words\_relative( $julian\_date\_diff );
 
@@ -474,7 +480,7 @@ Rounds $number to $precisioun places after the decimal point.
 
 ## num\_round\_trunc( $number, $precision )
 
-Same as num\_trunc() but just truncates after the $precision places.
+Same as num\_round() but just truncates after the $precision places.
 
 ## num\_pow( $number, $exponent )
 
@@ -505,18 +511,18 @@ Data::Tools::Time uses:
 # SYNOPSIS
 
     use Data::Tools::CSV qw( :all );  # import all functions
-    use Data::Tools::CSV;             # the same as :all :) 
+    use Data::Tools::CSV;             # the same as :all :)
     use Data::Tools::CSV qw( :none ); # do not import anything
 
     # --------------------------------------------------------------------------
 
     my $array_of_arrays = parse_csv( $csv_data_string );
     my @single_line     = parse_csv_line( $single_csv_line );
-    
+
     while( <$fh> )
       {
       parse_csv_line( $_ );
-      ...  
+      ...
       }
 
     # hash keys names are mapped from the first line of $csv_data (head)
@@ -537,7 +543,6 @@ actual data must be quoted:
     NAME,   TEL
     jim,    123
     boo,    "  413  "
-    
 
 second field will be \[TEL\] and data will be \[123\] and \[  413  \].
 
@@ -550,8 +555,8 @@ Parses multi-line CSV text and returnsh hashref to array of arrays.
 
 ## parse\_csv\_line( $single\_csv\_line, $delim, $strip )
 
-Parses single line CSV data and returns list of parsed fields' data. 
-This function will NOT strip trailing CR/LFs. However, parse\_csv() and 
+Parses single line CSV data and returns list of parsed fields' data.
+This function will NOT strip trailing CR/LFs. However, parse\_csv() and
 parse\_csv\_to\_hash\_array() will strip CR/LFs.
 
 ## parse\_csv\_to\_hash\_array( $csv\_data, $delim, $strip )
@@ -568,7 +573,6 @@ Data::Tools::CSV is compact, pure-perl implementation of a CSV parser of
 RFC4180 style CSV files:
 
     https://www.ietf.org/rfc/rfc4180.txt
-    
 
 RFC4180 says:
 
@@ -577,13 +581,19 @@ RFC4180 says:
     * whitespace and delimiters can be quoted with double quotes (").
     * quotes in quoted text should be doubled ("") as escaping.
 
+Any empty data (i.e. two delimiters without data between) will produce undef
+value. However there are quotes with nothing inside the result will be empty
+string (not undef!).
+
 # KNOWN ISSUES
 
 This implementation does not support multiline fields (lines split),
 as described in RFC4180, (2.6).
 
+Delimiter of "0" is silently converted to ",".
+
 There is no much error handling. However the code makes reasonable effort
-to handle properly all the data provided. This may seem vague but the CSV 
+to handle properly all the data provided. This may seem vague but the CSV
 format itself is vague :)
 
 # FEEDBACK
@@ -593,15 +603,145 @@ Please, report any bugs or missing features as long as they follow RFC4180.
 # GITHUB REPOSITORY
 
     git@github.com:cade-vs/perl-data-tools.git
-    
+
     git clone git://github.com/cade-vs/perl-data-tools.git
-    
 
 # AUTHOR
 
     Vladi Belperchinov-Shabanski "Cade"
           <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
-    http://cade.noxrun.com/  
+    http://cade.noxrun.com/
+# NAME
+
+    Data::Tools::Process provides set of functions for process control,
+    forking, daemonizing and pid files handling.
+
+# SYNOPSIS
+
+    use Data::Tools::Process qw( :all );  # import all functions
+    use Data::Tools::Process;             # the same as :all :)
+    use Data::Tools::Process qw( :none ); # do not import anything
+
+    # --------------------------------------------------------------------------
+
+    # fork and exec a command, returns the child pid to the parent
+    my $pid = fork_exec_cmd( "/usr/bin/somecmd --with args" );
+    waitpid( $pid, 0 );
+
+    # --------------------------------------------------------------------------
+
+    # detach from the controlling terminal and become a daemon
+    daemonize();
+    daemonize( CHDIR => '/var/lib/myapp', UMASK => 0022 );
+
+    # --------------------------------------------------------------------------
+
+    # create a pid file, holding the pid of the current process
+    my $res = pidfile_create( '/var/run/myapp.pid' );
+    die "already running with pid [$res]" if $res;
+
+    # ...and take over the pid file if the process in it is gone
+    my $res = pidfile_create( '/var/run/myapp.pid', STALE_CHECK => 1 );
+
+    # signal the process named in a pid file and remove the file
+    pidfile_kill_and_remove( '/var/run/myapp.pid' );          # sends TERM
+    pidfile_kill_and_remove( '/var/run/myapp.pid', 15, '5s', 9 );
+
+    # just remove the pid file
+    pidfile_remove( '/var/run/myapp.pid' );
+
+    # --------------------------------------------------------------------------
+
+# FUNCTIONS
+
+## fork\_exec\_cmd( $command )
+
+Forks and exec()s $command in the child process.
+
+Returns:
+
+    * the child process pid in the parent process
+    * undef if fork() failed
+
+The child never returns. $command is passed to exec() as a single string,
+so it is subject to the usual shell handling of exec().
+
+## daemonize( %options )
+
+Detaches the current process from the controlling terminal and turns it into
+a daemon: forks, calls POSIX::setsid(), forks again (SVR4 second fork policy),
+changes the current directory, closes all open file descriptors and reopens
+STDIN, STDOUT and STDERR to /dev/null.
+
+Options are:
+
+    CHDIR => $path   # directory to change to, default is '/'
+    UMASK => $umask  # umask to set, default is 0077
+
+Returns 1 in the resulting daemon process. The original process and the
+intermediate one exit() and never return. Dies on any of the steps failing.
+
+    NOTE: all open file descriptors are closed, including any files, sockets
+          or database handles opened before the call.
+
+## pidfile\_create( $pid\_file\_name, %options )
+
+Creates $pid\_file\_name and writes the pid of the current process in it. The
+file is created with O\_EXCL, so two processes racing for the same pid file
+cannot both succeed. Missing directories on the way are created.
+
+Options are:
+
+    STALE_CHECK => 1  # take over the pid file if its process is not running
+
+Returns:
+
+    * undef on success, the pid file now holds our pid
+    * a positive pid if the pid file exists and holds a running process
+    * -1 if the pid file cannot be created
+
+A pid file which does not hold a valid (positive) pid is always considered
+stale and is replaced, regardless of STALE\_CHECK.
+
+## pidfile\_kill\_and\_remove( $pid\_file\_name, @signal\_list )
+
+Sends the given signals to the pid found in $pid\_file\_name and then removes
+the file. @signal\_list defaults to a single TERM (15).
+
+A list item ending with 's' is not a signal but a sleep time in seconds. All
+items are processed in the given order, so:
+
+    pidfile_kill_and_remove( $fname, 15, '5s', 15, '2s', 9 );
+
+sends TERM, waits 5 seconds, sends TERM again, waits 2 seconds, sends KILL.
+
+Returns:
+
+    * undef if $pid_file_name does not exist
+    * 1 if the signals have been sent and the pid file removed
+
+## pidfile\_remove( $pid\_file\_name )
+
+Removes $pid\_file\_name. Returns undef.
+
+# REQUIRED MODULES
+
+Data::Tools::Process uses:
+
+    * POSIX
+    * Data::Tools
+
+# GITHUB REPOSITORY
+
+    git@github.com:cade-vs/perl-data-tools.git
+
+    git clone git://github.com/cade-vs/perl-data-tools.git
+
+# AUTHOR
+
+    Vladi Belperchinov-Shabanski "Cade"
+          <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+    http://cade.noxrun.com/
 # NAME
 
 Data::Tools::Process::Forks - Fork process creation and control
@@ -800,8 +940,8 @@ to the parent process when forked one has blocked for some reason.
     my $c = forks_wait_all( 4 ); 
     
 
-internally it calls forks\_wait\_one( undef ) until internal forked processes
-count reaches 0.
+internally it calls forks\_wait\_one() until internal forked processes
+count reached 0 or timeout reached.
 
 ## Process Signalling
 
@@ -1016,3 +1156,193 @@ This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
 Free Software Foundation; either version 2 of the License, or (at your
 option) any later version.
+# NAME
+
+    Data::Tools::Serialization provides set of high-level serialization
+    and deserialization wrapper functions.
+
+# SYNOPSIS
+
+    use Data::Tools::Serialization qw( :all );  # import all functions
+    use Data::Tools::Serialization;             # the same as :all :)
+    use Data::Tools::Serialization qw( :none ); # do not import anything
+
+    # --------------------------------------------------------------------------
+
+    my $perl_hoh = xml2perl( $xml_text );
+    my $xml_text = perl2xml( $perl_hoh );
+
+    my $perl_hoh  = json2perl( $json_text );
+    my $json_text = perl2json( $perl_hoh  );
+
+    # --------------------------------------------------------------------------
+
+# FUNCTIONS
+
+## xml2perl( $xml\_text )
+
+Returns perl hash of hashes reference representing the XML data text.
+
+## perl2xml( $perl\_hoh )
+
+Returns xml text representing the in-memory perl hash of hashes structure.
+
+## json2perl( $xml\_text )
+
+Returns perl hash of hashes reference representing the JSON data text.
+
+## perl2json( $perl\_hoh )
+
+Returns JSON text representing the in-memory perl hash of hashes structure.
+
+# REQUIRED MODULES
+
+Data::Tools::Serialization uses:
+
+    * XML::Bare
+    * JSON
+
+all are loaded on demand and are not initial requirement nor if just other
+parts of the Data::Tools are used.
+
+# GITHUB REPOSITORY
+
+    git@github.com:cade-vs/perl-data-tools.git
+
+    git clone git://github.com/cade-vs/perl-data-tools.git
+
+# AUTHOR
+
+    Vladi Belperchinov-Shabanski "Cade"
+          <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+    http://cade.noxrun.com/
+# NAME
+
+    Data::Tools::Socket::Protocols provides transparent serialization on top
+    of the Data::Tools::Socket message functions.
+
+# SYNOPSIS
+
+    use Data::Tools::Socket::Protocols qw( :all );  # import all functions
+    use Data::Tools::Socket::Protocols;             # the same as :all :)
+    use Data::Tools::Socket::Protocols qw( :none ); # do not import anything
+
+    # --------------------------------------------------------------------------
+
+    # send a hash reference, serialized with the 'j'son protocol
+    socket_protocol_write_message( $socket, 'j', $hash_ref, $timeout );
+
+    # read it back, the protocol type is taken from the message itself
+    my $hash_ref = socket_protocol_read_message( $socket, $timeout );
+
+    # in list context the protocol type and an error string are returned too
+    my ( $hash_ref, $ptype, $error ) =
+        socket_protocol_read_message( $socket, $timeout );
+
+    # the 'b'inary protocol carries plain data instead of a hash reference
+    socket_protocol_write_message( $socket, 'b', $raw_data, $timeout );
+
+    # --------------------------------------------------------------------------
+
+    # restrict which protocol types will be accepted and sent
+    socket_protocols_allow( 'bjh' );      # only binary, json and hash
+    socket_protocols_allow( 'b', 'jh' );  # the same, arguments are concatenated
+    socket_protocols_allow( '*' );        # allow all of them again
+
+    # --------------------------------------------------------------------------
+
+# PROTOCOL TYPES
+
+A protocol type is a single character, sent as the first byte of every
+message. The rest of the message is the payload, serialized accordingly:
+
+    'b'  binary,        payload is plain data, not a hash reference
+    'p'  Storable       (nfreeze/thaw)
+    'e'  Sereal
+    's'  Data::Stacker
+    'j'  JSON
+    'x'  XML::Simple
+    'h'  hash2str()     from Data::Tools, needs no extra module
+    'H'  hash2str_url() from Data::Tools, needs no extra module
+
+Except for 'b', the payload is always a hash reference.
+
+The module needed by a protocol type is loaded on demand, the first time
+that type is actually used, so a missing module is only a problem if the
+corresponding protocol type is used. 'b', 'h' and 'H' need no extra module.
+
+    NOTE: Storable is a core module and JSON is already required by
+          Data::Tools, so those types work out of the box. Sereal,
+          Data::Stacker and XML::Simple are not required by this
+          distribution and may need to be installed separately.
+
+# FUNCTIONS
+
+## socket\_protocol\_write\_message( $socket, $ptype, $data, $timeout )
+
+Serializes $data according to the $ptype protocol type, prefixes it with the
+protocol type character and sends it with socket\_write\_message().
+
+$data must be a hash reference, unless $ptype is 'b', in which case it is
+plain data.
+
+Returns 1 on success or undef if the message could not be sent.
+
+Confesses if $ptype is not a known or currently allowed protocol type, or if
+$data is not a hash reference for a non-binary protocol type.
+
+## socket\_protocol\_read\_message( $socket, $timeout, $opt )
+
+Reads a message with socket\_read\_message(), takes the protocol type from its
+first byte and deserializes the rest accordingly.
+
+In scalar context returns the deserialized data, or undef on error.
+
+In list context returns:
+
+    ( $data, $ptype, $error )
+
+$error is undef when everything went fine, otherwise it is one of the error
+strings of socket\_read\_message(), or 'E\_EMPTY' if the message carries no
+protocol type byte or no payload after it.
+
+Confesses if the incoming protocol type is not known or not currently
+allowed, or if a non-binary protocol type does not deserialize into a hash
+reference.
+
+## socket\_protocols\_allow( @protocol\_types )
+
+Restricts which protocol types will be accepted and sent. The arguments are
+concatenated and then split into single characters, so these are the same:
+
+    socket_protocols_allow( 'bjh' );
+    socket_protocols_allow( 'b', 'j', 'h' );
+
+A single '\*' allows all known protocol types again.
+
+By default all protocol types are allowed. Confesses if an unknown protocol
+type is given, in which case the allowed set is left incomplete, so pass all
+wanted types in one call.
+
+# REQUIRED MODULES
+
+Data::Tools::Socket::Protocols uses:
+
+    * Data::Tools
+    * Data::Tools::Socket
+
+and, on demand and only for the corresponding protocol types:
+
+    * Storable, Sereal, Data::Stacker, JSON, XML::Simple
+
+# GITHUB REPOSITORY
+
+    git@github.com:cade-vs/perl-data-tools.git
+
+    git clone git://github.com/cade-vs/perl-data-tools.git
+
+# AUTHOR
+
+    Vladi Belperchinov-Shabanski "Cade"
+          <cade@noxrun.com> <cade@bis.bg> <cade@cpan.org>
+    http://cade.noxrun.com/
