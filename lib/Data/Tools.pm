@@ -78,6 +78,7 @@ our @EXPORT = qw(
 
               hash2json
               hash2json_pp
+              hash2json_cc
               json2hash
 
               hash_uc
@@ -94,6 +95,7 @@ our @EXPORT = qw(
               hash_save_json_pp
               hash_load_json
 
+              hash_fingerprint
               hash_validate
 
               hash_lock_recursive
@@ -228,6 +230,7 @@ sub file_load
   my $mopt;
   $mopt = ":encoding($encoding)" if $encoding;
   open( $i, "<" . $mopt, $fn ) or return undef;
+  flock( $i, LOCK_SH ) if $opt->{ 'FLOCK' };
   binmode( $i ) if $opt->{ ':RAW' };
   local $/ = undef;
   my $s = <$i>;
@@ -256,6 +259,7 @@ sub file_load_ar
   my $mopt;
   $mopt = ":encoding($encoding)" if $encoding;
   open( $i, "<" . $mopt, $fn ) or return undef;
+  flock( $i, LOCK_SH ) if $opt->{ 'FLOCK' };
   binmode( $i ) if $opt->{ ':RAW' };
   my @all = <$i>;
   close $i;
@@ -279,8 +283,18 @@ sub file_save
   $mopt = ":encoding($encoding)" if $encoding;
 
   my $o;
+  # FIXME: with FLOCK, ">" empties the file before flock() below, so a reader can
+  #        get an empty file in that window; open with ">>", then flock(), then
+  #        truncate() to close it
   open( $o, ">" . $mopt, $fn ) or return 0;
+  if( $opt->{ 'FLOCK' } )
+    {
+    flock( $o, LOCK_EX );
+    truncate( $o, 0 ); # need to clear file if race but after lock
+    }
   binmode( $o ) if $opt->{ ':RAW' };
+  # FIXME: print and close results are ignored, a full disk returns 1 while
+  #        leaving a truncated file (silent data loss for session files)
   print $o @_;
   close $o;
   return 1;
@@ -376,8 +390,6 @@ sub file_text_append
   return 1;
 }
 
-
-
 ##############################################################################
 
 sub cmd_read_from
@@ -404,7 +416,6 @@ sub cmd_write_to
   close $o;
   return 1;
 }
-
 
 ##############################################################################
 
@@ -950,19 +961,30 @@ sub url2hash
   return \%hash;
 }
 
+# FIXME: hash2json(), json2hash(), hash_load_json() and hash_save_json() now
+#        return undef on failure where they used to die, and hash_save_json_pp()
+#        now writes canonical UTF-8; exported by default, needs a Changes entry
 sub hash2json
 {
-  return encode_json( shift );
+  return scalar eval { encode_json( $_[0] ) };
 }
 
+my $__JSON_PP = JSON->new()->utf8()->canonical(1)->pretty( 1 );
 sub hash2json_pp
 {
-  return JSON->new()->pretty( 1 )->encode( shift );
+  return scalar eval { $__JSON_PP->encode( $_[0] ) };
+}
+
+# CanoniCal :)
+my $__JSON_CC = JSON->new()->utf8()->canonical(1);
+sub hash2json_cc
+{
+  return scalar eval { $__JSON_CC->encode( $_[0] ) };
 }
 
 sub json2hash
 {
-  return decode_json( shift );
+  return scalar eval { decode_json( $_[0] ); };
 }
 
 ##############################################################################
@@ -1054,7 +1076,7 @@ sub hash_save_json
   my $fn = shift;
   my $hr = shift;
 
-  return file_save( $fn, encode_json( $hr ) );
+  return file_save( $fn, hash2json( $hr ) // return undef );
 }
 
 sub hash_save_json_pp
@@ -1062,17 +1084,23 @@ sub hash_save_json_pp
   my $fn = shift;
   my $hr = shift;
 
-  return file_save( $fn, JSON->new()->pretty( 1 )->encode( $hr ) );
+  return file_save( $fn, hash2json_pp( $hr ) // return undef );
 }
 
 sub hash_load_json
 {
   my $fn = shift;
 
-  return decode_json( file_load( $fn ));
+  return json2hash( file_load( $fn ) );
 }
 
 ##############################################################################
+
+sub hash_fingerprint
+{
+  return undef if ! defined $_[0] or ref( $_[0] ) ne 'HASH';
+  return sha1_hex( hash2json_cc( $_[0] ) // return undef );
+}
 
 sub hash_validate
 {
